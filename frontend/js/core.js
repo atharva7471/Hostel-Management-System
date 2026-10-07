@@ -9,7 +9,6 @@ document.write(`
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="${prefix}css/index.css" rel="stylesheet">
     <script src="${prefix}js/theme.js"></script>
-    <script src="${prefix}js/api.js"></script>
     <script src="${prefix}js/auth.js"></script>
     <script src="${prefix}js/utils.js"></script>
     <script src="${prefix}js/components.js"></script>

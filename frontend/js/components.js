@@ -6,7 +6,10 @@ async function loadComponents(container) {
     for (let el of elements) {
         const comp = el.getAttribute('data-component');
         try {
-            let html = await fetch(${prefix}components/.html).then(r => r.text());
+            let html = await fetch(`${prefix}components/${comp}.html`).then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return r.text();
+            });
             
             // Basic prop replacement
             const attrs = el.attributes;

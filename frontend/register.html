@@ -29,7 +29,7 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
                     <input type="text" id="name" required 
                         class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-                        placeholder="John Doe">
+                        placeholder="e.g. Atharva Bhosale">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email address</label>
@@ -41,7 +41,13 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
                     <input type="password" id="password" required 
                         class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-                        placeholder="••••••••">
+                        placeholder="********">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+                    <input type="password" id="confirm-password" required 
+                        class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                        placeholder="********">
                 </div>
                 
                 <div class="pt-2">
@@ -73,47 +79,65 @@
         }
     </script>
     <script>
-        lucide.createIcons();
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submit-btn');
-            const btnText = document.getElementById('btn-text');
-            const spinner = document.getElementById('btn-spinner');
-            const errorMsg = document.getElementById('error-message');
-            
-            btn.disabled = true;
-            btnText.textContent = 'Creating account...';
-            spinner.classList.remove('hidden');
-            errorMsg.classList.add('hidden');
-            
-            try {
-                const response = await fetch('http://localhost:8000/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: document.getElementById('name').value,
-                        email: document.getElementById('email').value,
-                        password: document.getElementById('password').value
-                    })
+        document.addEventListener('LayoutLoaded', () => {
+            const form = document.getElementById('register-form');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('submit-btn');
+                    const btnText = document.getElementById('btn-text');
+                    const spinner = document.getElementById('btn-spinner');
+                    const errorMsg = document.getElementById('error-message');
+                    
+                    btn.disabled = true;
+                    btnText.textContent = 'Creating account...';
+                    spinner.classList.remove('hidden');
+                    errorMsg.classList.add('hidden');
+                    
+                    const password = document.getElementById('password').value;
+                    const confirmPassword = document.getElementById('confirm-password').value;
+                    
+                    if (password !== confirmPassword) {
+                        errorMsg.textContent = 'Passwords do not match';
+                        errorMsg.classList.remove('hidden');
+                        btn.disabled = false;
+                        btnText.textContent = 'Sign up';
+                        spinner.classList.add('hidden');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('http://localhost:8000/api/auth/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: document.getElementById('name').value,
+                                email: document.getElementById('email').value,
+                                password: password
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(data.detail || 'Registration failed');
+                        }
+                        
+                        // Success - redirect to login
+                        window.location.href = 'login.html';
+                    } catch (err) {
+                        errorMsg.textContent = err.message;
+                        errorMsg.classList.remove('hidden');
+                    } finally {
+                        btn.disabled = false;
+                        btnText.textContent = 'Sign up';
+                        spinner.classList.add('hidden');
+                    }
                 });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.detail || 'Registration failed');
-                }
-                
-                // Success - redirect to login
-                window.location.href = 'login.html';
-            } catch (err) {
-                errorMsg.textContent = err.message;
-                errorMsg.classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                btnText.textContent = 'Sign up';
-                spinner.classList.add('hidden');
             }
+            lucide.createIcons();
         });
     </script>
 </body>
 </html>
+

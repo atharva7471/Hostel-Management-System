@@ -7,15 +7,24 @@
 <div class="max-w-6xl mx-auto space-y-6">
                 <!-- Toolbar -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         <div class="relative flex-1 sm:w-64">
                             <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                             <input type="text" id="search-input" placeholder="Search students..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm">
                         </div>
+                        <select id="status-filter" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                            <option value="">All Statuses</option>
+                            <option value="UNDER_REVIEW">Under Review</option>
+                            <option value="APPROVED">Approved (Unallocated)</option>
+                            <option value="ACTIVE_RESIDENT">Active Resident</option>
+                        </select>
+                        <select id="hostel-filter" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                            <option value="">All Hostels</option>
+                        </select>
+                        <select id="room-filter" class="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                            <option value="">All Rooms</option>
+                        </select>
                     </div>
-                    <button onclick="openAddModal()" class="flex items-center px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 transition shadow-sm whitespace-nowrap">
-                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Add Student
-                    </button>
                 </div>
 
                 <!-- Table -->
@@ -40,6 +49,91 @@
                     </div>
                 </div>
             </div>
+
+    <!-- Student Modal -->
+    <div id="student-modal" class="fixed inset-0 bg-gray-900/50 dark:bg-gray-900/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-surface-800 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-surface-900/50">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="modal-title">Edit Student</h3>
+                <button onclick="closeModal('student-modal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-700">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="student-form" class="space-y-4">
+                    <input type="hidden" id="student-id">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                            <input type="text" id="s-name" required class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm transition-shadow">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student ID (PRN)</label>
+                            <input type="text" id="s-sid" required class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm transition-shadow">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                            <input type="email" id="s-email" required class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm transition-shadow">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+                            <input type="tel" id="s-phone" required class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm transition-shadow">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Course</label>
+                            <input type="text" id="s-course" required class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm transition-shadow">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
+                            <input type="text" id="s-year" required class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm transition-shadow">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                            <select id="s-status" class="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm transition-shadow">
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="INACTIVE">INACTIVE</option>
+                                <option value="GRADUATED">GRADUATED</option>
+                                <option value="ACTIVE_RESIDENT">ACTIVE_RESIDENT</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Application Details (Read Only) -->
+                    <div id="application-details" class="hidden mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Application Details</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Guardian Name</label>
+                                <input type="text" id="s-guardian-name" readonly class="w-full px-3 py-2 rounded-xl border-none bg-gray-50 dark:bg-surface-900/50 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Guardian Phone</label>
+                                <input type="text" id="s-guardian-phone" readonly class="w-full px-3 py-2 rounded-xl border-none bg-gray-50 dark:bg-surface-900/50 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Preferred Hostel</label>
+                                <input type="text" id="s-pref-hostel" readonly class="w-full px-3 py-2 rounded-xl border-none bg-gray-50 dark:bg-surface-900/50 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Preferred Room Type</label>
+                                <input type="text" id="s-pref-room" readonly class="w-full px-3 py-2 rounded-xl border-none bg-gray-50 dark:bg-surface-900/50 text-sm">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Special Requirements</label>
+                                <input type="text" id="s-spec-req" readonly class="w-full px-3 py-2 rounded-xl border-none bg-gray-50 dark:bg-surface-900/50 text-sm">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3 bg-gray-50/50 dark:bg-surface-900/50">
+                <button type="button" onclick="closeModal('student-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-surface-700 transition">Cancel</button>
+                <button type="button" onclick="saveStudent()" class="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 shadow-sm transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
 <script>
         tailwind.config = {
             darkMode: 'class',
@@ -60,12 +154,42 @@
 
         let students = [];
 
-        async function loadStudents() {
+        async function loadData() {
             try {
+                // Fetch hostels and rooms for filters
+                const hostels = await fetchAPI('/hostels/');
+                const hostelFilter = document.getElementById('hostel-filter');
+                hostels.forEach(h => {
+                    const opt = document.createElement('option');
+                    opt.value = h._id;
+                    opt.textContent = h.name;
+                    hostelFilter.appendChild(opt);
+                });
+                
+                const rooms = await fetchAPI('/rooms/');
+                const roomFilter = document.getElementById('room-filter');
+                rooms.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r._id;
+                    opt.textContent = r.room_number;
+                    roomFilter.appendChild(opt);
+                });
+
+                // Fetch students
                 students = await fetchAPI('/students/');
                 renderStudents(students);
+                
+                // Open modal if id in query params
+                const params = new URLSearchParams(window.location.search);
+                const idParam = params.get('id');
+                if (idParam) {
+                    const student = students.find(s => s._id === idParam);
+                    if (student) openEditModal(student);
+                }
             } catch (err) {}
         }
+        
+        document.addEventListener('LayoutLoaded', loadData);
 
         function renderStudents(data) {
             const tbody = document.getElementById('students-table-body');
@@ -89,14 +213,27 @@
                         <p class="text-xs text-gray-500">${s.year}</p>
                     </td>
                     <td class="px-6 py-4 text-sm">
-                        ${s.allocated_room_id ? `<span class="px-2 py-1 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 rounded-md font-medium">${s.allocated_room_number} • Bed ${s.allocated_bed_number}</span>` : '<span class="text-gray-400">Unassigned</span>'}
+                        ${s.allocated_room_id ? `<span class="px-2 py-1 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 rounded-md font-medium">${s.allocated_room_number} &middot; Bed ${s.allocated_bed_number}</span>` : '<span class="text-gray-400">Unassigned</span>'}
                     </td>
                     <td class="px-6 py-4">
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${s.status === 'ACTIVE' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'}">
-                            ${s.status}
-                        </span>
+                        ${s.application_status === 'UNDER_REVIEW' 
+                            ? '<span class="px-2.5 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Under Review</span>'
+                            : (s.status === 'ACTIVE_RESIDENT'
+                                ? '<span class="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Active Resident</span>'
+                                : (s.application_status === 'APPROVED' 
+                                    ? '<span class="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">Approved (Unassigned)</span>'
+                                    : `<span class="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">${s.status}</span>`))
+                        }
                     </td>
-                    <td class="px-6 py-4 text-right">
+                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                        ${s.application_status === 'UNDER_REVIEW' 
+                            ? `<button onclick="updateApplication('${s._id}', 'APPROVED')" class="px-2 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded-md text-xs font-medium mr-1" title="Approve">Approve</button>
+                               <button onclick="updateApplication('${s._id}', 'REJECTED')" class="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded-md text-xs font-medium mr-1" title="Reject">Reject</button>
+                               <button onclick="updateApplication('${s._id}', 'CHANGES_REQUESTED')" class="px-2 py-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded-md text-xs font-medium mr-2" title="Request Changes">Changes</button>`
+                            : (s.application_status === 'APPROVED' && s.status !== 'ACTIVE_RESIDENT'
+                                ? `<button onclick="openAllocationModal('${s._id}')" class="px-2 py-1 bg-brand-100 text-brand-700 hover:bg-brand-200 rounded-md text-xs font-medium mr-2">Allocate</button>`
+                                : '')
+                        }
                         <button onclick='openEditModal(${JSON.stringify(s).replace(/'/g, "&apos;")})' class="text-gray-400 hover:text-brand-500 transition mr-3"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
                         <button onclick="deleteStudent('${s._id}')" class="text-gray-400 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
@@ -105,35 +242,81 @@
             lucide.createIcons();
         }
 
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase();
-            const filtered = students.filter(s => 
-                s.full_name.toLowerCase().includes(q) || 
-                s.student_id.toLowerCase().includes(q) ||
-                s.email.toLowerCase().includes(q)
-            );
+        async function updateApplication(id, status) {
+            try {
+                await fetchAPI(`/students/${id}/application`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ status })
+                });
+                showToast(`Application ${status.toLowerCase()}`);
+                loadData();
+            } catch (e) {}
+        }
+        
+        function openAllocationModal(id) {
+            window.location.href = 'rooms.html';
+        }
+
+        function applyFilters() {
+            const q = document.getElementById('search-input').value.toLowerCase();
+            const statusF = document.getElementById('status-filter').value;
+            const hostelF = document.getElementById('hostel-filter').value;
+            const roomF = document.getElementById('room-filter').value;
+            
+            const filtered = students.filter(s => {
+                const matchQ = s.full_name.toLowerCase().includes(q) || s.student_id.toLowerCase().includes(q) || s.email.toLowerCase().includes(q);
+                let matchStatus = true;
+                if (statusF) {
+                    if (statusF === 'UNDER_REVIEW') matchStatus = s.application_status === 'UNDER_REVIEW';
+                    else if (statusF === 'APPROVED') matchStatus = s.application_status === 'APPROVED' && s.status !== 'ACTIVE_RESIDENT';
+                    else if (statusF === 'ACTIVE_RESIDENT') matchStatus = s.status === 'ACTIVE_RESIDENT';
+                }
+                let matchHostel = true;
+                if (hostelF) matchHostel = s.allocated_hostel_id === hostelF;
+                let matchRoom = true;
+                if (roomF) matchRoom = s.allocated_room_id === roomF;
+                return matchQ && matchStatus && matchHostel && matchRoom;
+            });
             renderStudents(filtered);
-        });
+        }
+
+        document.getElementById('search-input').addEventListener('input', applyFilters);
+        document.getElementById('status-filter').addEventListener('change', applyFilters);
+        document.getElementById('hostel-filter').addEventListener('change', applyFilters);
+        document.getElementById('room-filter').addEventListener('change', applyFilters);
 
         function openAddModal() {
             document.getElementById('student-form').reset();
             document.getElementById('student-id').value = '';
             document.getElementById('s-email').disabled = false;
+            document.getElementById('application-details').classList.add('hidden');
             document.getElementById('modal-title').textContent = 'Add Student';
             openModal('student-modal');
         }
 
         function openEditModal(s) {
             document.getElementById('student-id').value = s._id;
-            document.getElementById('s-name').value = s.full_name;
-            document.getElementById('s-sid').value = s.student_id;
-            document.getElementById('s-email').value = s.email;
+            document.getElementById('s-name').value = s.full_name || '';
+            document.getElementById('s-sid').value = s.student_id || '';
+            document.getElementById('s-email').value = s.email || '';
             document.getElementById('s-email').disabled = true; // Cannot edit email since it's user id
-            document.getElementById('s-phone').value = s.phone;
-            document.getElementById('s-course').value = s.course;
-            document.getElementById('s-year').value = s.year;
-            document.getElementById('s-status').value = s.status;
-            document.getElementById('modal-title').textContent = 'Edit Student';
+            document.getElementById('s-phone').value = s.phone || '';
+            document.getElementById('s-course').value = s.course || '';
+            document.getElementById('s-year').value = s.year || '';
+            document.getElementById('s-status').value = s.status || '';
+            
+            if (s.guardian_name) {
+                document.getElementById('application-details').classList.remove('hidden');
+                document.getElementById('s-guardian-name').value = s.guardian_name || '';
+                document.getElementById('s-guardian-phone').value = s.guardian_phone || '';
+                document.getElementById('s-pref-hostel').value = s.preferred_hostel || '';
+                document.getElementById('s-pref-room').value = s.preferred_room_type || '';
+                document.getElementById('s-spec-req').value = s.special_requirements || 'None';
+            } else {
+                document.getElementById('application-details').classList.add('hidden');
+            }
+            
+            document.getElementById('modal-title').textContent = 'Student Profile';
             openModal('student-modal');
         }
 

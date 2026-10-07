@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="auth" data-page-title="Profile Setup - HostelOS">
+    <div class="absolute top-4 right-4">
+        <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition">
+            <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
+            <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+        </button>
+    </div>
+
+    <div class="w-full max-w-2xl my-8">
+        <div class="flex justify-center mb-8">
+            <a href="../index.html" class="flex items-center space-x-2">
+                <i data-lucide="building-2" class="w-8 h-8 text-brand-500"></i>
+                <span class="text-2xl font-bold tracking-tight">HostelOS</span>
+            </a>
+        </div>
+
+        <div class="bg-white dark:bg-surface-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8" id="form-container">
+            <h2 class="text-2xl font-semibold text-center mb-2">Complete Your Profile</h2>
+            <p class="text-center text-gray-500 dark:text-gray-400 mb-6">Please fill in your details to apply for a hostel.</p>
+            
+            <div id="error-message" class="hidden mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm text-center"></div>
+
+            <form id="profile-form" class="space-y-6">
+                <!-- Personal Details -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Personal Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                            <input type="text" id="full_name" required class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                            <input type="tel" id="phone" required class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Details -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Academic Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Student ID (PRN/Roll No)</label>
+                            <input type="text" id="student_id" required class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Course</label>
+                            <input type="text" id="course" required class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. BE Computer Engineering">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Academic Year</label>
+                            <select id="year" required class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                                <option value="">Select Year</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guardian Details -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Guardian Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Guardian Name</label>
+                            <input type="text" id="guardian_name" required class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Guardian Phone</label>
+                            <input type="tel" id="guardian_phone" required class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Hostel Preferences</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preferred Hostel</label>
+                            <select id="preferred_hostel" required class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                                <option value="">Select Hostel</option>
+                                <option value="Boys Hostel A">Boys Hostel A</option>
+                                <option value="Boys Hostel B">Boys Hostel B</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preferred Room Type</label>
+                            <select id="preferred_room_type" required class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                                <option value="">Select Room Type</option>
+                                <option value="1-Bed">1-Bed (Single)</option>
+                                <option value="2-Bed">2-Bed</option>
+                                <option value="3-Bed">3-Bed</option>
+                                <option value="4-Bed">4-Bed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preferred Floor</label>
+                            <input type="text" id="preferred_floor" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Special Requirements</label>
+                            <input type="text" id="special_requirements" class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Medical conditions, etc.">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pt-4">
+                    <button type="submit" id="submit-btn" class="w-full py-3 px-4 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 transition shadow-sm flex justify-center items-center">
+                        <span id="btn-text">Submit Application</span>
+                        <i data-lucide="loader-2" id="btn-spinner" class="w-4 h-4 ml-2 animate-spin hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Success Message container (hidden initially) -->
+        <div id="success-container" class="hidden bg-white dark:bg-surface-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8 text-center">
+            <div class="flex justify-center mb-4">
+                <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                    <i data-lucide="check" class="w-8 h-8 text-green-600 dark:text-green-400"></i>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Application Submitted!</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">Management will review your application and assign your hostel, room and bed shortly.</p>
+            <a href="dashboard.html" class="inline-block py-2.5 px-6 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 transition shadow-sm">
+                Go to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('LayoutLoaded', async () => {
+            lucide.createIcons();
+            
+            // Check auth
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            if (!token || role !== 'STUDENT') {
+                window.location.href = '../login.html';
+                return;
+            }
+
+            // Pre-fill email and name from user token if possible
+            try {
+                const user = await fetchAPI('/auth/me');
+                if (user) {
+                    document.getElementById('full_name').value = user.name || '';
+                }
+            } catch (e) {
+                // pass
+            }
+
+            const form = document.getElementById('profile-form');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('submit-btn');
+                    const btnText = document.getElementById('btn-text');
+                    const spinner = document.getElementById('btn-spinner');
+                    const errorMsg = document.getElementById('error-message');
+                    
+                    btn.disabled = true;
+                    btnText.textContent = 'Submitting...';
+                    spinner.classList.remove('hidden');
+                    errorMsg.classList.add('hidden');
+                    
+                    try {
+                        const payload = {
+                            full_name: document.getElementById('full_name').value,
+                            phone: document.getElementById('phone').value,
+                            student_id: document.getElementById('student_id').value,
+                            course: document.getElementById('course').value,
+                            year: document.getElementById('year').value,
+                            guardian_name: document.getElementById('guardian_name').value,
+                            guardian_phone: document.getElementById('guardian_phone').value,
+                            preferred_hostel: document.getElementById('preferred_hostel').value,
+                            preferred_room_type: document.getElementById('preferred_room_type').value,
+                            preferred_floor: document.getElementById('preferred_floor').value,
+                            special_requirements: document.getElementById('special_requirements').value
+                        };
+
+                        const response = await fetch('http://localhost:8000/api/students/profile', {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(data.detail || 'Submission failed');
+                        }
+                        
+                        // Show success UI
+                        document.getElementById('form-container').classList.add('hidden');
+                        document.getElementById('success-container').classList.remove('hidden');
+                    } catch (err) {
+                        errorMsg.textContent = err.message;
+                        errorMsg.classList.remove('hidden');
+                        btn.disabled = false;
+                        btnText.textContent = 'Submit Application';
+                        spinner.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

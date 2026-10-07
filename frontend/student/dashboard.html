@@ -262,8 +262,18 @@
         async function loadProfile() {
             try {
                 const data = await fetchAPI('/dashboard/stats');
+                if (!data || !data.profile) {
+                    window.location.href = 'profile-setup.html';
+                    return;
+                }
+                
                 if (data && data.profile) {
                     const p = data.profile;
+                    
+                    if (p.application_status === 'INCOMPLETE') {
+                        window.location.href = 'profile-setup.html';
+                        return;
+                    }
                     
                     document.getElementById('welcome-msg').textContent = `Welcome back, ${p.full_name}`;
                     document.getElementById('avatar-initials').textContent = p.full_name.substring(0, 2).toUpperCase();
@@ -356,7 +366,7 @@
                                     </div>
                                     <div>
                                         <p class="text-sm font-semibold">${r.title}</p>
-                                        <p class="text-xs text-gray-500 mt-0.5">${r.type} • ${new Date(r.created_at).toLocaleDateString()}</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">${r.type} &middot; ${new Date(r.created_at).toLocaleDateString()}</p>
                                     </div>
                                 </div>
                                 <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300">${r.status.replace('_', ' ')}</span>

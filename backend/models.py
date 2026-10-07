@@ -98,6 +98,7 @@ class BedStatus(str, Enum):
 class Bed(BaseModel):
     bed_number: str
     status: BedStatus = BedStatus.AVAILABLE
+    student_id: Optional[str] = None
     student_email: Optional[str] = None
     student_name: Optional[str] = None
 

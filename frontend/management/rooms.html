@@ -92,7 +92,7 @@
                     return `
                         <div onclick='openRoomDetails(${JSON.stringify(r).replace(/'/g, "&apos;")})' class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm cursor-pointer hover:border-brand-500 dark:hover:border-brand-500 transition group">
                             <h3 class="text-lg font-bold mb-1">Room ${r.room_number}</h3>
-                            <p class="text-xs text-gray-500 mb-4">Floor ${r.floor} • ${occupied}/${r.capacity} beds</p>
+                            <p class="text-xs text-gray-500 mb-4">Floor ${r.floor} &middot; ${occupied}/${r.capacity} beds</p>
                             <div class="flex flex-wrap gap-1">
                                 ${indicators}
                             </div>
@@ -105,7 +105,7 @@
         function openRoomDetails(r) {
             selectedRoom = r;
             document.getElementById('drawer-title').textContent = `Room ${r.room_number}`;
-            document.getElementById('drawer-subtitle').textContent = `Floor ${r.floor} • Capacity: ${r.capacity}`;
+            document.getElementById('drawer-subtitle').textContent = `Floor ${r.floor} &middot; Capacity: ${r.capacity}`;
             
             const content = document.getElementById('drawer-content');
             if (r.beds.length === 0) {
@@ -117,7 +117,7 @@
                     
                     if (b.status === 'OCCUPIED') {
                         badge = `<span class="px-2 py-0.5 text-xs rounded bg-brand-100 text-brand-800 dark:bg-brand-900/30 dark:text-brand-400">Occupied</span>`;
-                        action = `<button onclick="vacateBed('${b.bed_number}')" class="text-xs font-medium text-red-500 hover:underline">Vacate</button>`;
+                        action = `<button onclick="vacateBed('${b.student_id}')" class="text-xs font-medium text-red-500 hover:underline">Vacate</button>`;
                     } else if (b.status === 'MAINTENANCE') {
                         badge = `<span class="px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Maintenance</span>`;
                         action = `<button onclick="setBedStatus('${b.bed_number}', 'AVAILABLE')" class="text-xs font-medium text-brand-500 hover:underline">Fix</button>`;
@@ -213,33 +213,44 @@
             const sid = document.getElementById('a-student').value;
             if(!sid) return;
             try {
-                await fetchAPI(`/rooms/${selectedRoom._id}/allocate`, {
+                await fetchAPI('/allocations', {
                     method: 'POST',
-                    body: JSON.stringify({ bed_number: selectedBedNumber, student_id: sid })
+                    body: JSON.stringify({ 
+                        student_id: sid, 
+                        hostel_id: selectedRoom.hostel_id, 
+                        room_id: selectedRoom._id, 
+                        bed_number: selectedBedNumber 
+                    })
                 });
                 showToast('Student allocated');
                 closeModal('allocate-modal');
-                // Refresh data
                 await init();
                 await loadRooms();
                 const updatedRoom = currentRooms.find(r => r._id === selectedRoom._id);
                 openRoomDetails(updatedRoom);
-            } catch(e) {}
+            } catch(e) {
+                console.error(e);
+            }
         }
 
-        async function vacateBed(bedNumber) {
+        async function vacateBed(studentId) {
+            if (!studentId || studentId === 'undefined') {
+                showToast('Cannot vacate: student ID missing');
+                return;
+            }
             if(confirm('Vacate this bed?')) {
                 try {
-                    await fetchAPI(`/rooms/${selectedRoom._id}/vacate`, {
-                        method: 'POST',
-                        body: JSON.stringify({ bed_number: bedNumber })
+                    await fetchAPI(`/allocations/${studentId}`, {
+                        method: 'DELETE'
                     });
                     showToast('Bed vacated');
                     await init();
                     await loadRooms();
                     const updatedRoom = currentRooms.find(r => r._id === selectedRoom._id);
                     openRoomDetails(updatedRoom);
-                } catch(e) {}
+                } catch(e) {
+                    console.error(e);
+                }
             }
         }
 

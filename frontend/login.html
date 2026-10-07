@@ -29,13 +29,13 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="email">Email address</label>
                     <input type="email" id="email" required 
                         class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-                        placeholder="management@hostelos.com">
+                        placeholder="********">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" for="password">Password</label>
                     <input type="password" id="password" required 
                         class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
-                        placeholder="••••••••">
+                        placeholder="********">
                 </div>
                 
                 <div class="pt-2">
@@ -67,6 +67,60 @@
             }
         }
     </script>
-    <script>lucide.createIcons();</script>
+    <script>
+        document.addEventListener('LayoutLoaded', () => {
+            const form = document.getElementById('login-form');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('submit-btn');
+                    const btnText = document.getElementById('btn-text');
+                    const spinner = document.getElementById('btn-spinner');
+                    const errorMsg = document.getElementById('error-message');
+                    
+                    btn.disabled = true;
+                    btnText.textContent = 'Signing in...';
+                    spinner.classList.remove('hidden');
+                    errorMsg.classList.add('hidden');
+                    
+                    try {
+                        const formData = new URLSearchParams();
+                        formData.append('username', document.getElementById('email').value);
+                        formData.append('password', document.getElementById('password').value);
+
+                        const response = await fetch('http://localhost:8000/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(data.detail || 'Login failed');
+                        }
+                        
+                        localStorage.setItem('token', data.access_token);
+                        localStorage.setItem('role', data.role);
+                        
+                        if (data.role === 'MANAGEMENT') {
+                            window.location.href = 'management/dashboard.html';
+                        } else {
+                            window.location.href = 'student/dashboard.html';
+                        }
+                    } catch (err) {
+                        errorMsg.textContent = err.message;
+                        errorMsg.classList.remove('hidden');
+                    } finally {
+                        btn.disabled = false;
+                        btnText.textContent = 'Sign in';
+                        spinner.classList.add('hidden');
+                    }
+                });
+            }
+        });
+        lucide.createIcons();
+    </script>
 </body>
 </html>
+

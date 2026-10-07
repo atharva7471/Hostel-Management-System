@@ -2,7 +2,7 @@
 const API_BASE = 'http://localhost:8000/api';
 
 async function fetchAPI(endpoint, options = {}) {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('token');
     
     const defaultHeaders = {
         'Content-Type': 'application/json',
@@ -22,7 +22,7 @@ async function fetchAPI(endpoint, options = {}) {
         });
 
         if (response.status === 401 || response.status === 403) {
-            localStorage.removeItem('access_token');
+            localStorage.removeItem('token');
             localStorage.removeItem('role');
             window.location.href = '../login.html';
             return null;

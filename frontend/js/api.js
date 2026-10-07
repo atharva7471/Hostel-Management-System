@@ -1,14 +1,14 @@
-const API_BASE = '/api';
+const API_BASE = 'http://localhost:8000/api';
 
 async function fetchAPI(endpoint, options = {}) {
     const token = localStorage.getItem('token');
     const headers = {
         'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': Bearer  } : {}),
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...(options.headers || {})
     };
 
-    const res = await fetch(${API_BASE}, {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
         headers
     });

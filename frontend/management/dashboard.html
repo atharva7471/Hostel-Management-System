@@ -152,7 +152,31 @@
                         </div>
                         <p class="text-3xl font-semibold text-green-700 dark:text-green-300" id="stat-resolved">0</p>
                     </a>
+                </div>
                 
+                <!-- Phase 6: Student Onboarding -->
+                <div class="mt-6 bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-bold">New Student Applications</h2>
+                        <span class="bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 text-xs font-semibold px-2.5 py-0.5 rounded-full" id="stat-pending-applications">0 pending</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
+                                    <th class="pb-3 font-medium">Student Name</th>
+                                    <th class="pb-3 font-medium">Course & Year</th>
+                                    <th class="pb-3 font-medium">Status</th>
+                                    <th class="pb-3 font-medium text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-applications-body" class="text-sm">
+                                <tr><td colspan="4" class="py-4 text-center text-gray-500">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- Phase 5: Comms -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-6">
@@ -247,6 +271,34 @@
                 document.getElementById('stat-pending-maintenance').textContent = stats.pending_maintenance || 0;
                 document.getElementById('stat-in-progress').textContent = stats.in_progress_requests || 0;
                 document.getElementById('stat-resolved').textContent = stats.resolved_this_month || 0;
+
+                // Phase 6 Stats
+                document.getElementById('stat-pending-applications').textContent = `${stats.pending_applications || 0} pending`;
+                
+                const appsContainer = document.getElementById('recent-applications-body');
+                if (stats.recent_applications && stats.recent_applications.length > 0) {
+                    appsContainer.innerHTML = stats.recent_applications.map(app => `
+                        <tr class="border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-surface-800 transition">
+                            <td class="py-3">
+                                <div class="font-medium text-gray-900 dark:text-white">${app.full_name}</div>
+                                <div class="text-xs text-gray-500">${app.student_id}</div>
+                            </td>
+                            <td class="py-3 text-gray-600 dark:text-gray-400">
+                                ${app.course} &middot; ${app.year}
+                            </td>
+                            <td class="py-3">
+                                <span class="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                    Under Review
+                                </span>
+                            </td>
+                            <td class="py-3 text-right">
+                                <a href="students.html?id=${app._id}" class="text-sm font-medium text-brand-600 hover:text-brand-500">View</a>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    appsContainer.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-gray-500">No pending applications</td></tr>`;
+                }
 
                 setTimeout(() => {
                     document.getElementById('occupancy-bar').style.width = `${stats.occupancy_rate}%`;
