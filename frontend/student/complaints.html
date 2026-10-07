@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="student" data-page-title="My Complaints - Student - HostelOS">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">My Complaints</h1>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">Submit and track your hostel complaints.</p>
+            </div>
+            <button onclick="openModal('create-complaint-modal')" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-500 transition shadow-sm flex items-center">
+                <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Submit Complaint
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="complaints-grid">
+            <div class="animate-pulse h-48 bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm"></div>
+            <div class="animate-pulse h-48 bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm"></div>
+        </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        checkAuth('STUDENT');
+        lucide.createIcons();
+
+        async function loadData() {
+            try {
+                // Get profile first
+                const profileData = await fetchAPI('/dashboard/stats');
+                if (profileData && profileData.profile) {
+                    document.getElementById('avatar-initials').textContent = profileData.profile.full_name.substring(0, 2).toUpperCase();
+                }
+
+                // Get complaints
+                const data = await fetchAPI('/complaints/');
+                data.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+                
+                const container = document.getElementById('complaints-grid');
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-1 md:col-span-2 lg:col-span-3 p-10 text-center bg-white dark:bg-surface-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                            <div class="w-16 h-16 bg-gray-50 dark:bg-surface-900/50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                                <i data-lucide="check-circle" class="w-8 h-8"></i>
+                            </div>
+                            <h3 class="text-lg font-medium">No complaints</h3>
+                            <p class="text-gray-500 mt-1">You haven't submitted any complaints yet.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                container.innerHTML = data.map(c => `
+                    <div onclick='openDrawer(${JSON.stringify(c).replace(/'/g, "&apos;")})' class="p-6 bg-white dark:bg-surface-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col h-full group">
+                        <div class="flex justify-between items-start mb-4">
+                            ${getStatusBadge(c.status)}
+                            ${getPriorityBadge(c.priority)}
+                        </div>
+                        <h3 class="font-semibold text-lg mb-2 line-clamp-1 group-hover:text-brand-600 transition">${c.title}</h3>
+                        <p class="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">${c.description}</p>
+                        <div class="flex items-center justify-between text-xs text-gray-400 pt-4 border-t border-gray-100 dark:border-gray-700">
+                            <span class="flex items-center"><i data-lucide="map-pin" class="w-3 h-3 mr-1"></i> ${c.location}</span>
+                            <span>${new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+
+            } catch (e) {}
+        }
+
+        function getPriorityBadge(p) {
+            let colors = {
+                'LOW': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
+                'MEDIUM': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+                'HIGH': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+                'URGENT': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+            };
+            return `<span class="px-2 py-0.5 text-[10px] uppercase font-bold rounded ${colors[p] || colors.LOW}">${p}</span>`;
+        }
+
+        function getStatusBadge(s) {
+            let colors = {
+                'SUBMITTED': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600',
+                'ASSIGNED': 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-200 dark:border-purple-800',
+                'IN_PROGRESS': 'bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-400 border border-brand-200 dark:border-brand-800',
+                'RESOLVED': 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800',
+                'CLOSED': 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+            };
+            return `<span class="px-2.5 py-1 text-xs font-medium rounded-full ${colors[s] || colors.SUBMITTED}">${s.replace('_', ' ')}</span>`;
+        }
+
+        async function submitComplaint() {
+            const form = document.getElementById('create-form');
+            if(!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const payload = {
+                title: document.getElementById('c-title').value,
+                description: document.getElementById('c-desc').value,
+                category: document.getElementById('c-category').value,
+                priority: document.getElementById('c-priority').value,
+                location: document.getElementById('c-location').value
+            };
+
+            try {
+                await fetchAPI('/complaints/', { method: 'POST', body: JSON.stringify(payload) });
+                showToast('Complaint submitted successfully');
+                closeModal('create-complaint-modal');
+                form.reset();
+                loadData();
+            } catch (e) {}
+        }
+
+        function openDrawer(c) {
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('side-drawer');
+            const content = document.getElementById('drawer-content');
+            
+            const timelineSteps = ['SUBMITTED', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED'];
+            let currentStepIdx = timelineSteps.indexOf(c.status);
+            if (c.status === 'CLOSED') currentStepIdx = 4;
+
+            let timelineHtml = `<div class="relative pl-6 space-y-6 before:absolute before:inset-y-0 before:left-[11px] before:w-0.5 before:bg-gray-200 dark:before:bg-gray-700 before:z-0">`;
+            timelineSteps.forEach((step, idx) => {
+                let dotClass = idx <= currentStepIdx ? 'bg-brand-500 border-brand-500' : 'bg-white dark:bg-surface-800 border-gray-300 dark:border-gray-600';
+                let textClass = idx <= currentStepIdx ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500';
+                timelineHtml += `
+                    <div class="relative z-10 flex items-center">
+                        <div class="absolute -left-6 w-3 h-3 rounded-full border-2 ${dotClass}"></div>
+                        <span class="text-sm ${textClass}">${step.replace('_', ' ')}</span>
+                    </div>
+                `;
+            });
+            timelineHtml += `</div>`;
+
+            content.innerHTML = `
+                <div>
+                    <h3 class="text-xl font-bold mb-2">${c.title}</h3>
+                    <p class="text-sm text-gray-500 bg-gray-50 dark:bg-surface-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700">${c.description}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-gray-500 mb-1">Category</p>
+                        <p class="font-medium">${c.category.replace('_', ' ')}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 mb-1">Priority</p>
+                        ${getPriorityBadge(c.priority)}
+                    </div>
+                    <div>
+                        <p class="text-gray-500 mb-1">Location</p>
+                        <p class="font-medium">${c.location}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 mb-1">Created</p>
+                        <p class="font-medium">${new Date(c.created_at).toLocaleDateString()}</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Tracking</h4>
+                    ${timelineHtml}
+                </div>
+            `;
+
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                drawer.classList.add('open');
+            }, 10);
+        }
+
+        function closeDrawer() {
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('side-drawer');
+            drawer.classList.remove('open');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

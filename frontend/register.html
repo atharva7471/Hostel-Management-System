@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="js/core.js"></script>
+</head>
+<body data-layout="auth" data-page-title="Register - HostelOS">
+<div class="absolute top-4 right-4">
+        <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition">
+            <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
+            <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+        </button>
+    </div>
+
+    <div class="w-full max-w-md">
+        <div class="flex justify-center mb-8">
+            <a href="index.html" class="flex items-center space-x-2">
+                <i data-lucide="building-2" class="w-8 h-8 text-brand-500"></i>
+                <span class="text-2xl font-bold tracking-tight">HostelOS</span>
+            </a>
+        </div>
+
+        <div class="bg-white dark:bg-surface-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8">
+            <h2 class="text-2xl font-semibold text-center mb-6">Create an account</h2>
+            
+            <div id="error-message" class="hidden mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm text-center"></div>
+
+            <form id="register-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                    <input type="text" id="name" required 
+                        class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                        placeholder="John Doe">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email address</label>
+                    <input type="email" id="email" required 
+                        class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                        placeholder="student@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                    <input type="password" id="password" required 
+                        class="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition"
+                        placeholder="••••••••">
+                </div>
+                
+                <div class="pt-2">
+                    <button type="submit" id="submit-btn" class="w-full py-2.5 px-4 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 transition shadow-sm flex justify-center items-center">
+                        <span id="btn-text">Sign up</span>
+                        <i data-lucide="loader-2" id="btn-spinner" class="w-4 h-4 ml-2 animate-spin hidden"></i>
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6 text-center text-sm">
+                <span class="text-gray-500 dark:text-gray-400">Already have an account?</span>
+                <a href="login.html" class="text-brand-600 hover:text-brand-500 font-medium ml-1">Log in</a>
+            </div>
+        </div>
+    </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        lucide.createIcons();
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('btn-text');
+            const spinner = document.getElementById('btn-spinner');
+            const errorMsg = document.getElementById('error-message');
+            
+            btn.disabled = true;
+            btnText.textContent = 'Creating account...';
+            spinner.classList.remove('hidden');
+            errorMsg.classList.add('hidden');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Registration failed');
+                }
+                
+                // Success - redirect to login
+                window.location.href = 'login.html';
+            } catch (err) {
+                errorMsg.textContent = err.message;
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Sign up';
+                spinner.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

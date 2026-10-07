@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="management" data-page-title="Payment History - Management - HostelOS">
+<div class="max-w-6xl mx-auto space-y-6">
+                <!-- Toolbar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="search-input" placeholder="Search by payment ID or student..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 dark:bg-surface-900/50 text-gray-500 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium">Payment ID</th>
+                                    <th class="px-6 py-4 font-medium">Student</th>
+                                    <th class="px-6 py-4 font-medium">Date</th>
+                                    <th class="px-6 py-4 font-medium">Method</th>
+                                    <th class="px-6 py-4 font-medium">Amount</th>
+                                    <th class="px-6 py-4 font-medium">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payments-table-body" class="divide-y divide-gray-100 dark:divide-gray-800">
+                                <tr><td colspan="6" class="p-4"><div class="h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        checkAuth('MANAGEMENT');
+        lucide.createIcons();
+
+        let allPayments = [];
+        const fmt = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+
+        async function loadPayments() {
+            try {
+                allPayments = await fetchAPI('/payments/');
+                // Sort by date descending
+                allPayments.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+                renderPayments(allPayments);
+            } catch (err) {}
+        }
+
+        function renderPayments(data) {
+            const tbody = document.getElementById('payments-table-body');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No payment records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => {
+                let badgeClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+                if (p.status === 'COMPLETED') badgeClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+                else if (p.status === 'FAILED') badgeClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+
+                return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-surface-800/50 transition">
+                    <td class="px-6 py-4 font-mono text-xs">${p.payment_id}</td>
+                    <td class="px-6 py-4 font-medium">${p.student_name}</td>
+                    <td class="px-6 py-4 text-sm">${new Date(p.payment_date).toLocaleString()}</td>
+                    <td class="px-6 py-4 text-sm">${p.method.replace('_', ' ')}</td>
+                    <td class="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">${fmt.format(p.amount)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${badgeClass}">${p.status}</span>
+                    </td>
+                </tr>
+            `}).join('');
+            lucide.createIcons();
+        }
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            const filtered = allPayments.filter(p => 
+                p.student_name.toLowerCase().includes(q) || 
+                p.payment_id.toLowerCase().includes(q)
+            );
+            renderPayments(filtered);
+        });
+
+        loadPayments();
+    </script>
+</body>
+</html>

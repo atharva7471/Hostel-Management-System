@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="management" data-page-title="Hostels - Management - HostelOS">
+<div class="max-w-6xl mx-auto space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">Manage Hostels</h2>
+                    <button onclick="openAddModal()" class="flex items-center px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 transition shadow-sm">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Add Hostel
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="hostels-grid">
+                    <!-- Skeletons -->
+                    <div class="p-6 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm animate-pulse h-40"></div>
+                </div>
+            </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        checkAuth('MANAGEMENT');
+        lucide.createIcons();
+
+        async function loadHostels() {
+            try {
+                const hostels = await fetchAPI('/hostels/');
+                const grid = document.getElementById('hostels-grid');
+                if (hostels.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full p-8 text-center text-gray-500 bg-white dark:bg-surface-800 rounded-2xl border border-gray-100 dark:border-gray-700">No hostels added yet.</div>`;
+                    return;
+                }
+                grid.innerHTML = hostels.map(h => `
+                    <div class="p-6 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm relative group">
+                        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition flex gap-2">
+                            <button onclick='openEditModal(${JSON.stringify(h).replace(/'/g, "&apos;")})' class="p-1.5 text-gray-400 hover:text-brand-500 bg-gray-50 dark:bg-surface-900 rounded-lg"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                            <button onclick="deleteHostel('${h._id}')" class="p-1.5 text-gray-400 hover:text-red-500 bg-gray-50 dark:bg-surface-900 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 flex items-center justify-center mb-4">
+                            <i data-lucide="building" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">${h.name}</h3>
+                        <p class="text-sm text-gray-500 mb-4">Block: ${h.building}</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600 dark:text-gray-400">${h.floors} Floors</span>
+                            <a href="rooms.html?hostel_id=${h._id}" class="text-brand-600 dark:text-brand-400 font-medium hover:underline">View Rooms &rarr;</a>
+                        </div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            } catch (e) {}
+        }
+
+        function openAddModal() {
+            document.getElementById('hostel-form').reset();
+            document.getElementById('h-id').value = '';
+            document.getElementById('modal-title').textContent = 'Add Hostel';
+            openModal('hostel-modal');
+        }
+
+        function openEditModal(h) {
+            document.getElementById('h-id').value = h._id;
+            document.getElementById('h-name').value = h.name;
+            document.getElementById('h-building').value = h.building;
+            document.getElementById('h-floors').value = h.floors;
+            document.getElementById('h-desc').value = h.description || '';
+            document.getElementById('modal-title').textContent = 'Edit Hostel';
+            openModal('hostel-modal');
+        }
+
+        async function saveHostel() {
+            const id = document.getElementById('h-id').value;
+            const payload = {
+                name: document.getElementById('h-name').value,
+                building: document.getElementById('h-building').value,
+                floors: parseInt(document.getElementById('h-floors').value),
+                description: document.getElementById('h-desc').value
+            };
+            try {
+                if (id) {
+                    await fetchAPI(`/hostels/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+                    showToast('Hostel updated');
+                } else {
+                    await fetchAPI('/hostels/', { method: 'POST', body: JSON.stringify(payload) });
+                    showToast('Hostel created');
+                }
+                closeModal('hostel-modal');
+                loadHostels();
+            } catch(e) {}
+        }
+
+        async function deleteHostel(id) {
+            if(confirm("Delete this hostel?")) {
+                try {
+                    await fetchAPI(`/hostels/${id}`, { method: 'DELETE' });
+                    showToast('Hostel deleted');
+                    loadHostels();
+                } catch(e) {}
+            }
+        }
+
+        loadHostels();
+    </script>
+</body>
+</html>

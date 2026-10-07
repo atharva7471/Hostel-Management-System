@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="student" data-page-title="Announcements - Student - HostelOS">
+<div class="mb-8">
+            <h1 class="text-2xl font-bold tracking-tight">Announcements</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Important notices and updates from hostel management.</p>
+        </div>
+
+        <div class="space-y-6" id="announcements-list">
+            <div class="animate-pulse h-32 bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm"></div>
+        </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        checkAuth('STUDENT');
+        lucide.createIcons();
+
+        async function loadData() {
+            try {
+                // Get profile first
+                const profileData = await fetchAPI('/dashboard/stats');
+                if (profileData && profileData.profile) {
+                    document.getElementById('avatar-initials').textContent = profileData.profile.full_name.substring(0, 2).toUpperCase();
+                }
+
+                // Get announcements
+                const data = await fetchAPI('/announcements/');
+                
+                const container = document.getElementById('announcements-list');
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-10 text-center bg-white dark:bg-surface-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                            <div class="w-16 h-16 bg-gray-50 dark:bg-surface-900/50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                                <i data-lucide="megaphone" class="w-8 h-8"></i>
+                            </div>
+                            <h3 class="text-lg font-medium">No Announcements</h3>
+                            <p class="text-gray-500 mt-1">Check back later for updates from management.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                container.innerHTML = data.map(a => `
+                    <div class="p-6 bg-white dark:bg-surface-800 rounded-2xl border ${a.priority === 'URGENT' ? 'border-red-200 dark:border-red-900/50' : 'border-gray-100 dark:border-gray-700'} shadow-sm">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-semibold text-lg">${a.title}</h3>
+                            ${getPriorityBadge(a.priority)}
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 whitespace-pre-wrap">${a.description}</p>
+                        <div class="text-xs text-gray-400">
+                            ${new Date(a.created_at).toLocaleString(undefined, {dateStyle: 'medium', timeStyle: 'short'})}
+                        </div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+
+            } catch (e) {}
+        }
+
+        function getPriorityBadge(p) {
+            let colors = {
+                'NORMAL': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
+                'IMPORTANT': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+                'URGENT': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+            };
+            return `<span class="px-2 py-0.5 text-[10px] uppercase font-bold rounded ${colors[p] || colors.NORMAL}">${p}</span>`;
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="management" data-page-title="Maintenance - Management - HostelOS">
+<div class="max-w-6xl mx-auto space-y-6">
+                <!-- Toolbar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="search-input" placeholder="Search requests..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                        </div>
+                        <select id="status-filter" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                            <option value="">All Statuses</option>
+                            <option value="SUBMITTED">Submitted</option>
+                            <option value="ASSIGNED">Assigned</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="RESOLVED">Resolved</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 dark:bg-surface-900/50 text-gray-500 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium">Issue</th>
+                                    <th class="px-6 py-4 font-medium">Student</th>
+                                    <th class="px-6 py-4 font-medium">Category</th>
+                                    <th class="px-6 py-4 font-medium">Location</th>
+                                    <th class="px-6 py-4 font-medium">Priority</th>
+                                    <th class="px-6 py-4 font-medium">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="maintenance-table" class="divide-y divide-gray-100 dark:divide-gray-800">
+                                <tr><td colspan="6" class="p-4"><div class="h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        checkAuth('MANAGEMENT');
+        lucide.createIcons();
+
+        let allData = [];
+
+        async function loadData() {
+            try {
+                allData = await fetchAPI('/maintenance/');
+                allData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                renderTable(allData);
+            } catch (e) {}
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('maintenance-table');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No maintenance requests found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(m => {
+                const priorityBadge = getPriorityBadge(m.priority);
+                const statusBadge = getStatusBadge(m.status);
+
+                return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-surface-800/50 transition cursor-pointer" onclick='openDrawer(${JSON.stringify(m).replace(/'/g, "&apos;")})'>
+                    <td class="px-6 py-4">
+                        <p class="font-medium truncate max-w-[200px]" title="${m.title}">${m.title}</p>
+                        <p class="text-xs text-gray-500">${new Date(m.created_at).toLocaleDateString()}</p>
+                    </td>
+                    <td class="px-6 py-4 text-sm">${m.student_name}</td>
+                    <td class="px-6 py-4 text-sm">${m.category.replace('_', ' ')}</td>
+                    <td class="px-6 py-4 text-sm">${m.location}</td>
+                    <td class="px-6 py-4">${priorityBadge}</td>
+                    <td class="px-6 py-4">${statusBadge}</td>
+                </tr>
+            `}).join('');
+        }
+
+        function getPriorityBadge(p) {
+            let colors = {
+                'LOW': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
+                'MEDIUM': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+                'HIGH': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+                'URGENT': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+            };
+            return `<span class="px-2.5 py-1 text-xs font-medium rounded-full ${colors[p] || colors.LOW}">${p}</span>`;
+        }
+
+        function getStatusBadge(s) {
+            let colors = {
+                'SUBMITTED': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
+                'ASSIGNED': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+                'IN_PROGRESS': 'bg-brand-100 text-brand-800 dark:bg-brand-900/30 dark:text-brand-400',
+                'RESOLVED': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+                'CLOSED': 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+            };
+            return `<span class="px-2.5 py-1 text-xs font-medium rounded-full ${colors[s] || colors.SUBMITTED}">${s.replace('_', ' ')}</span>`;
+        }
+
+        document.getElementById('search-input').addEventListener('input', filterData);
+        document.getElementById('status-filter').addEventListener('change', filterData);
+
+        function filterData() {
+            const q = document.getElementById('search-input').value.toLowerCase();
+            const s = document.getElementById('status-filter').value;
+            
+            const filtered = allData.filter(m => {
+                const matchQ = m.title.toLowerCase().includes(q) || m.student_name.toLowerCase().includes(q);
+                const matchS = s ? m.status === s : true;
+                return matchQ && matchS;
+            });
+            renderTable(filtered);
+        }
+
+        function openDrawer(m) {
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('side-drawer');
+            
+            const content = document.getElementById('drawer-content');
+            
+            const timelineSteps = ['SUBMITTED', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED'];
+            let currentStepIdx = timelineSteps.indexOf(m.status);
+            if (m.status === 'CLOSED') currentStepIdx = 4;
+
+            let timelineHtml = `<div class="relative pl-6 space-y-6 before:absolute before:inset-y-0 before:left-[11px] before:w-0.5 before:bg-gray-200 dark:before:bg-gray-700 before:z-0">`;
+            timelineSteps.forEach((step, idx) => {
+                let dotClass = idx <= currentStepIdx ? 'bg-brand-500 border-brand-500' : 'bg-white dark:bg-surface-800 border-gray-300 dark:border-gray-600';
+                let textClass = idx <= currentStepIdx ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-500';
+                timelineHtml += `
+                    <div class="relative z-10 flex items-center">
+                        <div class="absolute -left-6 w-3 h-3 rounded-full border-2 ${dotClass}"></div>
+                        <span class="text-sm ${textClass}">${step.replace('_', ' ')}</span>
+                    </div>
+                `;
+            });
+            timelineHtml += `</div>`;
+
+            content.innerHTML = `
+                <div>
+                    <h3 class="text-xl font-bold mb-2">${m.title}</h3>
+                    <p class="text-sm text-gray-500 bg-gray-50 dark:bg-surface-900 p-4 rounded-xl border border-gray-100 dark:border-gray-700">${m.description}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-gray-500 mb-1">Student</p>
+                        <p class="font-medium">${m.student_name}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 mb-1">Category</p>
+                        <p class="font-medium">${m.category.replace('_', ' ')}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 mb-1">Priority</p>
+                        ${getPriorityBadge(m.priority)}
+                    </div>
+                    <div>
+                        <p class="text-gray-500 mb-1">Location</p>
+                        <p class="font-medium">${m.location}</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-gray-500 mb-1">Created</p>
+                        <p class="font-medium">${new Date(m.created_at).toLocaleString()}</p>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Status Timeline</h4>
+                    ${timelineHtml}
+                </div>
+            `;
+
+            const actions = document.getElementById('drawer-actions');
+            actions.innerHTML = `
+                <label class="block text-sm font-medium mb-2">Update Status</label>
+                <div class="flex gap-2">
+                    <select id="update-status-select" class="flex-1 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-800 text-sm outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="SUBMITTED" ${m.status === 'SUBMITTED' ? 'selected' : ''}>Submitted</option>
+                        <option value="ASSIGNED" ${m.status === 'ASSIGNED' ? 'selected' : ''}>Assigned</option>
+                        <option value="IN_PROGRESS" ${m.status === 'IN_PROGRESS' ? 'selected' : ''}>In Progress</option>
+                        <option value="RESOLVED" ${m.status === 'RESOLVED' ? 'selected' : ''}>Resolved</option>
+                        <option value="CLOSED" ${m.status === 'CLOSED' ? 'selected' : ''}>Closed</option>
+                    </select>
+                    <button onclick="updateStatus('${m._id}')" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-sm font-medium hover:bg-brand-500 transition shadow-sm">Save</button>
+                </div>
+            `;
+
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                drawer.classList.add('open');
+            }, 10);
+        }
+
+        function closeDrawer() {
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('side-drawer');
+            drawer.classList.remove('open');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+
+        async function updateStatus(id) {
+            const newStatus = document.getElementById('update-status-select').value;
+            try {
+                await fetchAPI(`/maintenance/${id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ status: newStatus })
+                });
+                showToast('Status updated');
+                closeDrawer();
+                loadData();
+            } catch(e) {}
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

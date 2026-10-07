@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management Dashboard - HostelOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-surface-50 text-gray-900 dark:bg-surface-900 dark:text-gray-100 flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-surface-900 flex flex-col hidden md:flex">
+        <div class="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-800">
+            <i data-lucide="building-2" class="w-6 h-6 text-brand-500 mr-2"></i>
+            <span class="text-lg font-semibold tracking-tight">HostelOS</span>
+        </div>
+        <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+            <a href="dashboard.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-gray-100 dark:bg-surface-800 text-brand-600 dark:text-brand-400">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Overview
+            </a>
+            <a href="students.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-800 transition">
+                <i data-lucide="users" class="w-5 h-5 mr-3"></i> Students
+            </a>
+            <a href="hostels.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-800 transition">
+                <i data-lucide="building" class="w-5 h-5 mr-3"></i> Hostels
+            </a>
+            <a href="rooms.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-800 transition">
+                <i data-lucide="bed" class="w-5 h-5 mr-3"></i> Rooms
+            </a>
+        </div>
+        <div class="p-4 border-t border-gray-200 dark:border-gray-800">
+            <button onclick="logout()" class="flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition">
+                <i data-lucide="log-out" class="w-5 h-5 mr-3"></i> Sign out
+            </button>
+                    <div class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800">
+                <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Comms</p>
+                <a href="announcements.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-surface-800 transition">
+                    <i data-lucide="megaphone" class="w-5 h-5 mr-3"></i> Announcements
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+        <!-- Navbar -->
+        <header class="h-16 border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-surface-900/50 backdrop-blur flex items-center justify-between px-6 z-10">
+            <div class="flex items-center md:hidden">
+                <i data-lucide="building-2" class="w-6 h-6 text-brand-500 mr-2"></i>
+                <span class="text-lg font-semibold tracking-tight">HostelOS</span>
+            </div>
+            <h1 class="hidden md:block text-lg font-medium">Dashboard Overview</h1>
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-surface-800 transition">
+                    <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-500 to-purple-500 flex items-center justify-center text-white text-sm font-medium shadow-sm">
+                    MA
+                </div>
+            </div>
+        </header>
+
+        <!-- Content scrollable area -->
+        <div class="flex-1 overflow-auto p-6">
+            <div class="max-w-6xl mx-auto space-y-6">
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="stats-grid">
+                    <!-- Skeletons -->
+                    <div class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm animate-pulse h-32"></div>
+                    <div class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm animate-pulse h-32"></div>
+                    <div class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm animate-pulse h-32"></div>
+                    <div class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm animate-pulse h-32"></div>
+                </div>
+
+                <!-- Financial Overview -->
+                <div class="p-6 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+                    <h3 class="text-base font-semibold mb-4">Financial Overview</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="p-4 bg-gray-50 dark:bg-surface-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                            <p class="text-xs font-medium text-gray-500 mb-1">Total Fees</p>
+                            <p class="text-xl font-bold" id="stat-total-fees">₹0</p>
+                        </div>
+                        <div class="p-4 bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/30">
+                            <p class="text-xs font-medium text-green-600 dark:text-green-400 mb-1">Collected</p>
+                            <p class="text-xl font-bold text-green-700 dark:text-green-300" id="stat-collected">₹0</p>
+                        </div>
+                        <div class="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/30">
+                            <p class="text-xs font-medium text-amber-600 dark:text-amber-400 mb-1">Pending</p>
+                            <p class="text-xl font-bold text-amber-700 dark:text-amber-300" id="stat-pending">₹0</p>
+                        </div>
+                        <div class="p-4 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/30">
+                            <p class="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Overdue</p>
+                            <p class="text-xl font-bold text-red-700 dark:text-red-300" id="stat-overdue">₹0</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex flex-col items-center justify-center h-16 border border-gray-200 dark:border-gray-700 rounded-xl relative overflow-hidden">
+                        <div class="w-full h-full flex bg-gray-100 dark:bg-gray-800">
+                            <div id="bar-collected" class="h-full bg-green-500 transition-all duration-1000" style="width: 0%;"></div>
+                            <div id="bar-pending" class="h-full bg-amber-400 transition-all duration-1000" style="width: 0%;"></div>
+                            <div id="bar-overdue" class="h-full bg-red-500 transition-all duration-1000" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 4 Metrics -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="requests-grid">
+                    <a href="complaints.html?status=OPEN" class="p-5 rounded-2xl bg-brand-50 dark:bg-brand-900/10 border border-brand-100 dark:border-brand-900/30 shadow-sm hover:shadow-md transition cursor-pointer block">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-sm font-medium text-brand-600 dark:text-brand-400">Open Complaints</h3>
+                            <i data-lucide="message-square-warning" class="w-4 h-4 text-brand-400"></i>
+                        </div>
+                        <p class="text-3xl font-semibold text-brand-700 dark:text-brand-300" id="stat-open-complaints">0</p>
+                    </a>
+                    <a href="maintenance.html?status=OPEN" class="p-5 rounded-2xl bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 shadow-sm hover:shadow-md transition cursor-pointer block">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-sm font-medium text-orange-600 dark:text-orange-400">Pending Maintenance</h3>
+                            <i data-lucide="wrench" class="w-4 h-4 text-orange-400"></i>
+                        </div>
+                        <p class="text-3xl font-semibold text-orange-700 dark:text-orange-300" id="stat-pending-maintenance">0</p>
+                    </a>
+                    <a href="complaints.html?status=IN_PROGRESS" class="p-5 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 shadow-sm hover:shadow-md transition cursor-pointer block">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-sm font-medium text-blue-600 dark:text-blue-400">In Progress</h3>
+                            <i data-lucide="activity" class="w-4 h-4 text-blue-400"></i>
+                        </div>
+                        <p class="text-3xl font-semibold text-blue-700 dark:text-blue-300" id="stat-in-progress">0</p>
+                    </a>
+                    <a href="complaints.html?status=RESOLVED" class="p-5 rounded-2xl bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 shadow-sm hover:shadow-md transition cursor-pointer block">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-sm font-medium text-green-600 dark:text-green-400">Resolved This Month</h3>
+                            <i data-lucide="check-circle" class="w-4 h-4 text-green-400"></i>
+                        </div>
+                        <p class="text-3xl font-semibold text-green-700 dark:text-green-300" id="stat-resolved">0</p>
+                    </a>
+                
+                <!-- Phase 5: Comms -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-lg font-bold">Recent Announcements</h2>
+                            <a href="announcements.html" class="text-sm font-medium text-brand-600 hover:text-brand-500">View all</a>
+                        </div>
+                        <div id="recent-announcements" class="space-y-4">
+                            <div class="animate-pulse h-12 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-lg font-bold">System Activity</h2>
+                        </div>
+                        <div id="recent-notifications" class="space-y-4">
+                            <div class="animate-pulse h-12 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+</div>
+
+                <!-- Occupancy Chart / Placeholder -->
+                <div class="p-6 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm min-h-[300px]">
+                    <h3 class="text-base font-semibold mb-4">Hostel Occupancy Overview</h3>
+                    <div class="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl relative overflow-hidden">
+                        <div class="text-center z-10">
+                            <p class="text-5xl font-bold text-brand-600 dark:text-brand-400" id="occupancy-rate">0%</p>
+                            <p class="text-sm text-gray-500 mt-2">Overall Bed Occupancy</p>
+                        </div>
+                        <div class="absolute bottom-0 left-0 h-2 bg-brand-500 transition-all duration-1000" id="occupancy-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/theme.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        checkAuth('MANAGEMENT');
+        lucide.createIcons();
+
+        async function loadStats() {
+            try {
+                const stats = await fetchAPI('/dashboard/stats');
+                
+                document.getElementById('stats-grid').innerHTML = `
+                    <div class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Students</h3>
+                            <i data-lucide="users" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <p class="text-3xl font-semibold">${stats.total_students}</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Rooms</h3>
+                            <i data-lucide="door-closed" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <p class="text-3xl font-semibold">${stats.total_rooms}</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Occupied Beds</h3>
+                            <i data-lucide="bed-double" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <p class="text-3xl font-semibold">${stats.occupied_beds}</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Available Beds</h3>
+                            <i data-lucide="bed" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <p class="text-3xl font-semibold">${stats.available_beds}</p>
+                    </div>
+                `;
+                lucide.createIcons();
+
+                document.getElementById('occupancy-rate').textContent = `${stats.occupancy_rate}%`;
+                
+                // Format Currency
+                const fmt = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+                document.getElementById('stat-total-fees').textContent = fmt.format(stats.total_fees || 0);
+                document.getElementById('stat-collected').textContent = fmt.format(stats.collected || 0);
+                document.getElementById('stat-pending').textContent = fmt.format(stats.pending || 0);
+                document.getElementById('stat-overdue').textContent = fmt.format(stats.overdue || 0);
+
+                // Phase 4 Stats
+                document.getElementById('stat-open-complaints').textContent = stats.open_complaints || 0;
+                document.getElementById('stat-pending-maintenance').textContent = stats.pending_maintenance || 0;
+                document.getElementById('stat-in-progress').textContent = stats.in_progress_requests || 0;
+                document.getElementById('stat-resolved').textContent = stats.resolved_this_month || 0;
+
+                setTimeout(() => {
+                    document.getElementById('occupancy-bar').style.width = `${stats.occupancy_rate}%`;
+                    
+                    const tf = stats.total_fees || 1; // avoid /0
+                    document.getElementById('bar-collected').style.width = `${((stats.collected||0) / tf) * 100}%`;
+                    document.getElementById('bar-pending').style.width = `${((stats.pending||0) / tf) * 100}%`;
+                    document.getElementById('bar-overdue').style.width = `${((stats.overdue||0) / tf) * 100}%`;
+                }, 100);
+
+            } catch (err) {
+                // handle error
+            }
+        }
+
+        loadStats();
+    </script>
+</body>
+</html>
+
+
+
+

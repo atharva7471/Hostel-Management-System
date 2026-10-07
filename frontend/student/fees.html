@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="student" data-page-title="My Fees - Student - HostelOS">
+<div class="mb-8">
+            <h1 class="text-2xl font-bold tracking-tight">My Fees</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">View your fee details and payment history.</p>
+        </div>
+
+        <div class="space-y-6" id="fees-container">
+            <!-- Loading -->
+            <div class="animate-pulse h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl"></div>
+        </div>
+
+        <div class="mt-8">
+            <h2 class="text-xl font-semibold mb-4">Payment History</h2>
+            <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 dark:bg-surface-900/50 text-gray-500 dark:text-gray-400">
+                            <tr>
+                                <th class="px-6 py-4 font-medium">Date</th>
+                                <th class="px-6 py-4 font-medium">Amount</th>
+                                <th class="px-6 py-4 font-medium">Payment ID</th>
+                                <th class="px-6 py-4 font-medium">Method</th>
+                                <th class="px-6 py-4 font-medium">Status</th>
+                                <th class="px-6 py-4 font-medium text-right">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payments-table-body" class="divide-y divide-gray-100 dark:divide-gray-800">
+                            <tr><td colspan="6" class="p-4 text-center text-gray-500">Loading payments...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        checkAuth('STUDENT');
+        lucide.createIcons();
+
+        const fmt = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+
+        async function loadFees() {
+            try {
+                const fees = await fetchAPI('/fees/');
+                const container = document.getElementById('fees-container');
+                
+                if (fees.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-8 text-center bg-white dark:bg-surface-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                            <i data-lucide="check-circle" class="w-12 h-12 mx-auto text-green-500 mb-4"></i>
+                            <h3 class="text-lg font-medium">No fees found</h3>
+                            <p class="text-gray-500">You do not have any active fee records.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                container.innerHTML = fees.map(f => {
+                    const pct = f.fee_amount > 0 ? (f.amount_paid / f.fee_amount) * 100 : 0;
+                    let badgeClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+                    if (f.status === 'PAID') badgeClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+                    else if (f.status === 'PARTIALLY_PAID') badgeClass = 'bg-brand-100 text-brand-800 dark:bg-brand-900/30 dark:text-brand-400';
+                    else if (f.status === 'OVERDUE') badgeClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+
+                    return `
+                        <div class="p-6 sm:p-8 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden group">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <h2 class="text-xl font-bold">Hostel Fee (${f.academic_year})</h2>
+                                    <p class="text-sm text-gray-500 mt-1">Due: ${new Date(f.due_date).toLocaleDateString()}</p>
+                                </div>
+                                <span class="px-2.5 py-1 text-xs font-medium rounded-full ${badgeClass}">${f.status.replace('_', ' ')}</span>
+                            </div>
+
+                            <div class="flex items-end justify-between mb-2">
+                                <p class="text-3xl font-bold">${fmt.format(f.fee_amount)}</p>
+                                <p class="text-sm font-medium text-brand-600 dark:text-brand-400">${Math.round(pct)}% Paid</p>
+                            </div>
+
+                            <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 mb-4 overflow-hidden flex">
+                                <div class="bg-brand-500 h-3 transition-all duration-1000 ease-out" style="width: ${pct}%"></div>
+                            </div>
+
+                            <div class="flex justify-between text-sm">
+                                <span class="text-green-600 dark:text-green-400 font-medium">${fmt.format(f.amount_paid)} paid</span>
+                                <span class="text-gray-500 font-medium">${fmt.format(f.remaining_amount)} remaining</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                lucide.createIcons();
+
+            } catch (err) {}
+        }
+
+        async function loadPayments() {
+            try {
+                const payments = await fetchAPI('/payments/');
+                payments.sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
+                const tbody = document.getElementById('payments-table-body');
+                
+                if (payments.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No payments made yet.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = payments.map(p => {
+                    let badgeClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+                    if (p.status === 'COMPLETED') badgeClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+                    else if (p.status === 'FAILED') badgeClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+
+                    return `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-surface-800/50 transition">
+                        <td class="px-6 py-4 text-sm">${new Date(p.payment_date).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 text-sm font-bold">${fmt.format(p.amount)}</td>
+                        <td class="px-6 py-4 font-mono text-xs">${p.payment_id}</td>
+                        <td class="px-6 py-4 text-sm">${p.method.replace('_', ' ')}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 text-xs font-medium rounded-full ${badgeClass}">${p.status}</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick='viewReceipt(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="text-brand-600 hover:text-brand-500 transition text-sm font-medium">Receipt</button>
+                        </td>
+                    </tr>
+                `}).join('');
+            } catch (err) {}
+        }
+
+        function viewReceipt(p) {
+            document.getElementById('receipt-amount').textContent = fmt.format(p.amount);
+            document.getElementById('receipt-date').textContent = new Date(p.payment_date).toLocaleString();
+            document.getElementById('receipt-id').textContent = p.payment_id;
+            document.getElementById('receipt-method').textContent = p.method.replace('_', ' ');
+            openModal('receipt-modal');
+        }
+
+        async function init() {
+            try {
+                const data = await fetchAPI('/dashboard/stats');
+                if(data && data.profile) {
+                    document.getElementById('avatar-initials').textContent = data.profile.full_name.substring(0, 2).toUpperCase();
+                }
+            } catch(e) {}
+            await loadFees();
+            await loadPayments();
+        }
+
+        init();
+    </script>
+</body>
+</html>

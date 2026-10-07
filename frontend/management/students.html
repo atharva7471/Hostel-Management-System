@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="management" data-page-title="Students - Management - HostelOS">
+<div class="max-w-6xl mx-auto space-y-6">
+                <!-- Toolbar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="search-input" placeholder="Search students..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                        </div>
+                    </div>
+                    <button onclick="openAddModal()" class="flex items-center px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 transition shadow-sm whitespace-nowrap">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Add Student
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 dark:bg-surface-900/50 text-gray-500 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium">Name & ID</th>
+                                    <th class="px-6 py-4 font-medium">Contact</th>
+                                    <th class="px-6 py-4 font-medium">Course/Year</th>
+                                    <th class="px-6 py-4 font-medium">Room</th>
+                                    <th class="px-6 py-4 font-medium">Status</th>
+                                    <th class="px-6 py-4 font-medium text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body" class="divide-y divide-gray-100 dark:divide-gray-800">
+                                <!-- Skeletons -->
+                                <tr><td colspan="6" class="p-4"><div class="h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        checkAuth('MANAGEMENT');
+        lucide.createIcons();
+
+        let students = [];
+
+        async function loadStudents() {
+            try {
+                students = await fetchAPI('/students/');
+                renderStudents(students);
+            } catch (err) {}
+        }
+
+        function renderStudents(data) {
+            const tbody = document.getElementById('students-table-body');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-gray-500">No students found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(s => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-surface-800/50 transition">
+                    <td class="px-6 py-4">
+                        <p class="font-medium">${s.full_name}</p>
+                        <p class="text-xs text-gray-500">${s.student_id}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-sm">${s.email}</p>
+                        <p class="text-xs text-gray-500">${s.phone}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="text-sm">${s.course}</p>
+                        <p class="text-xs text-gray-500">${s.year}</p>
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        ${s.allocated_room_id ? `<span class="px-2 py-1 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 rounded-md font-medium">${s.allocated_room_number} • Bed ${s.allocated_bed_number}</span>` : '<span class="text-gray-400">Unassigned</span>'}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${s.status === 'ACTIVE' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'}">
+                            ${s.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick='openEditModal(${JSON.stringify(s).replace(/'/g, "&apos;")})' class="text-gray-400 hover:text-brand-500 transition mr-3"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="deleteStudent('${s._id}')" class="text-gray-400 hover:text-red-500 transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            const filtered = students.filter(s => 
+                s.full_name.toLowerCase().includes(q) || 
+                s.student_id.toLowerCase().includes(q) ||
+                s.email.toLowerCase().includes(q)
+            );
+            renderStudents(filtered);
+        });
+
+        function openAddModal() {
+            document.getElementById('student-form').reset();
+            document.getElementById('student-id').value = '';
+            document.getElementById('s-email').disabled = false;
+            document.getElementById('modal-title').textContent = 'Add Student';
+            openModal('student-modal');
+        }
+
+        function openEditModal(s) {
+            document.getElementById('student-id').value = s._id;
+            document.getElementById('s-name').value = s.full_name;
+            document.getElementById('s-sid').value = s.student_id;
+            document.getElementById('s-email').value = s.email;
+            document.getElementById('s-email').disabled = true; // Cannot edit email since it's user id
+            document.getElementById('s-phone').value = s.phone;
+            document.getElementById('s-course').value = s.course;
+            document.getElementById('s-year').value = s.year;
+            document.getElementById('s-status').value = s.status;
+            document.getElementById('modal-title').textContent = 'Edit Student';
+            openModal('student-modal');
+        }
+
+        async function saveStudent() {
+            const id = document.getElementById('student-id').value;
+            const payload = {
+                full_name: document.getElementById('s-name').value,
+                student_id: document.getElementById('s-sid').value,
+                email: document.getElementById('s-email').value,
+                phone: document.getElementById('s-phone').value,
+                course: document.getElementById('s-course').value,
+                year: document.getElementById('s-year').value,
+                status: document.getElementById('s-status').value
+            };
+
+            try {
+                if (id) {
+                    await fetchAPI(`/students/${id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(payload)
+                    });
+                    showToast('Student updated successfully');
+                } else {
+                    await fetchAPI(`/students/`, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    showToast('Student added successfully');
+                }
+                closeModal('student-modal');
+                loadStudents();
+            } catch (e) {}
+        }
+
+        async function deleteStudent(id) {
+            if(confirm("Are you sure you want to delete this student?")) {
+                try {
+                    await fetchAPI(`/students/${id}`, { method: 'DELETE' });
+                    showToast('Student deleted');
+                    loadStudents();
+                } catch(e) {}
+            }
+        }
+
+        loadStudents();
+    </script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="management" data-page-title="Rooms - Management - HostelOS">
+<div class="max-w-6xl mx-auto space-y-6">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="flex items-center gap-4 w-full sm:w-auto">
+                        <select id="hostel-select" class="pl-4 pr-10 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm w-full sm:w-64 appearance-none" onchange="loadRooms()">
+                            <option value="">Select Hostel...</option>
+                        </select>
+                    </div>
+                    <button onclick="openAddRoomModal()" class="flex items-center px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 transition shadow-sm whitespace-nowrap">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Add Room
+                    </button>
+                </div>
+
+                <!-- Room Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" id="rooms-grid">
+                    <div class="col-span-full p-8 text-center text-gray-500">Please select a hostel to view rooms.</div>
+                </div>
+
+            </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        checkAuth('MANAGEMENT');
+        lucide.createIcons();
+
+        let currentHostels = [];
+        let currentRooms = [];
+        let selectedRoom = null;
+        let selectedBedNumber = null;
+        let allStudents = [];
+
+        async function init() {
+            try {
+                currentHostels = await fetchAPI('/hostels/');
+                const select = document.getElementById('hostel-select');
+                if(currentHostels.length > 0) {
+                    select.innerHTML = '<option value="">Select Hostel...</option>' + currentHostels.map(h => `<option value="${h._id}">${h.name}</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">No hostels available</option>';
+                }
+            } catch (e) {}
+
+            try {
+                allStudents = await fetchAPI('/students/');
+            } catch (e) {}
+        }
+
+        async function loadRooms() {
+            const hid = document.getElementById('hostel-select').value;
+            const grid = document.getElementById('rooms-grid');
+            if(!hid) {
+                grid.innerHTML = '<div class="col-span-full p-8 text-center text-gray-500">Please select a hostel to view rooms.</div>';
+                return;
+            }
+
+            try {
+                currentRooms = await fetchAPI(`/rooms/?hostel_id=${hid}`);
+                if (currentRooms.length === 0) {
+                    grid.innerHTML = '<div class="col-span-full p-8 text-center text-gray-500 bg-white dark:bg-surface-800 rounded-2xl border border-gray-100 dark:border-gray-700">No rooms in this hostel.</div>';
+                    return;
+                }
+
+                grid.innerHTML = currentRooms.map(r => {
+                    const occupied = r.beds.filter(b => b.status === 'OCCUPIED').length;
+                    const totalBeds = r.beds.length;
+                    const indicators = Array.from({length: Math.max(r.capacity, totalBeds)}).map((_, i) => {
+                        if(i >= totalBeds) return `<div class="w-3 h-3 rounded-sm border border-gray-200 dark:border-gray-700"></div>`;
+                        const b = r.beds[i];
+                        if(b.status === 'OCCUPIED') return `<div class="w-3 h-3 rounded-sm bg-brand-500"></div>`;
+                        if(b.status === 'MAINTENANCE') return `<div class="w-3 h-3 rounded-sm bg-amber-400"></div>`;
+                        return `<div class="w-3 h-3 rounded-sm bg-green-400"></div>`;
+                    }).join('');
+
+                    return `
+                        <div onclick='openRoomDetails(${JSON.stringify(r).replace(/'/g, "&apos;")})' class="p-5 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm cursor-pointer hover:border-brand-500 dark:hover:border-brand-500 transition group">
+                            <h3 class="text-lg font-bold mb-1">Room ${r.room_number}</h3>
+                            <p class="text-xs text-gray-500 mb-4">Floor ${r.floor} • ${occupied}/${r.capacity} beds</p>
+                            <div class="flex flex-wrap gap-1">
+                                ${indicators}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {}
+        }
+
+        function openRoomDetails(r) {
+            selectedRoom = r;
+            document.getElementById('drawer-title').textContent = `Room ${r.room_number}`;
+            document.getElementById('drawer-subtitle').textContent = `Floor ${r.floor} • Capacity: ${r.capacity}`;
+            
+            const content = document.getElementById('drawer-content');
+            if (r.beds.length === 0) {
+                content.innerHTML = '<div class="text-center p-8 text-gray-500"><i data-lucide="bed" class="w-8 h-8 mx-auto mb-2 text-gray-300"></i><p>No beds created yet.</p></div>';
+            } else {
+                content.innerHTML = `<div class="space-y-3">` + r.beds.map(b => {
+                    let badge = '';
+                    let action = '';
+                    
+                    if (b.status === 'OCCUPIED') {
+                        badge = `<span class="px-2 py-0.5 text-xs rounded bg-brand-100 text-brand-800 dark:bg-brand-900/30 dark:text-brand-400">Occupied</span>`;
+                        action = `<button onclick="vacateBed('${b.bed_number}')" class="text-xs font-medium text-red-500 hover:underline">Vacate</button>`;
+                    } else if (b.status === 'MAINTENANCE') {
+                        badge = `<span class="px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Maintenance</span>`;
+                        action = `<button onclick="setBedStatus('${b.bed_number}', 'AVAILABLE')" class="text-xs font-medium text-brand-500 hover:underline">Fix</button>`;
+                    } else {
+                        badge = `<span class="px-2 py-0.5 text-xs rounded bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Available</span>`;
+                        action = `<button onclick="openAllocateModal('${b.bed_number}')" class="text-xs font-medium text-brand-500 hover:underline">Allocate</button>`;
+                    }
+
+                    return `
+                        <div class="flex items-center justify-between p-4 border border-gray-100 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-surface-800/50">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-medium text-sm">Bed ${b.bed_number}</span>
+                                    ${badge}
+                                </div>
+                                <p class="text-xs text-gray-500">${b.student_name ? b.student_name : 'No student assigned'}</p>
+                            </div>
+                            <div>${action}</div>
+                        </div>
+                    `;
+                }).join('') + `</div>`;
+            }
+            lucide.createIcons();
+            openDrawer('room-drawer');
+        }
+
+        function openAddRoomModal() {
+            const hid = document.getElementById('hostel-select').value;
+            if(!hid) {
+                showToast('Select a hostel first', 'error');
+                return;
+            }
+            document.getElementById('room-form').reset();
+            openModal('room-modal');
+        }
+
+        async function saveRoom() {
+            const hid = document.getElementById('hostel-select').value;
+            const payload = {
+                hostel_id: hid,
+                room_number: document.getElementById('r-number').value,
+                floor: parseInt(document.getElementById('r-floor').value),
+                capacity: parseInt(document.getElementById('r-capacity').value)
+            };
+            try {
+                await fetchAPI('/rooms/', { method: 'POST', body: JSON.stringify(payload) });
+                showToast('Room added');
+                closeModal('room-modal');
+                loadRooms();
+            } catch(e) {}
+        }
+
+        async function deleteRoom() {
+            if(confirm('Delete room and unassign all beds?')) {
+                try {
+                    await fetchAPI(`/rooms/${selectedRoom._id}`, { method: 'DELETE' });
+                    showToast('Room deleted');
+                    closeDrawer('room-drawer');
+                    loadRooms();
+                } catch(e) {}
+            }
+        }
+
+        function openBedModal() {
+            document.getElementById('bed-form').reset();
+            openModal('bed-modal');
+        }
+
+        async function saveBed() {
+            const payload = { bed_number: document.getElementById('b-number').value };
+            try {
+                const updatedRoom = await fetchAPI(`/rooms/${selectedRoom._id}/beds`, { method: 'POST', body: JSON.stringify(payload) });
+                showToast('Bed added');
+                closeModal('bed-modal');
+                loadRooms();
+                openRoomDetails(updatedRoom);
+            } catch(e) {}
+        }
+
+        function openAllocateModal(bedNumber) {
+            selectedBedNumber = bedNumber;
+            const select = document.getElementById('a-student');
+            const unallocated = allStudents.filter(s => !s.allocated_room_id && s.status === 'ACTIVE');
+            if (unallocated.length === 0) {
+                select.innerHTML = '<option value="">No active unallocated students</option>';
+            } else {
+                select.innerHTML = unallocated.map(s => `<option value="${s._id}">${s.full_name} (${s.student_id})</option>`).join('');
+            }
+            openModal('allocate-modal');
+        }
+
+        async function saveAllocation() {
+            const sid = document.getElementById('a-student').value;
+            if(!sid) return;
+            try {
+                await fetchAPI(`/rooms/${selectedRoom._id}/allocate`, {
+                    method: 'POST',
+                    body: JSON.stringify({ bed_number: selectedBedNumber, student_id: sid })
+                });
+                showToast('Student allocated');
+                closeModal('allocate-modal');
+                // Refresh data
+                await init();
+                await loadRooms();
+                const updatedRoom = currentRooms.find(r => r._id === selectedRoom._id);
+                openRoomDetails(updatedRoom);
+            } catch(e) {}
+        }
+
+        async function vacateBed(bedNumber) {
+            if(confirm('Vacate this bed?')) {
+                try {
+                    await fetchAPI(`/rooms/${selectedRoom._id}/vacate`, {
+                        method: 'POST',
+                        body: JSON.stringify({ bed_number: bedNumber })
+                    });
+                    showToast('Bed vacated');
+                    await init();
+                    await loadRooms();
+                    const updatedRoom = currentRooms.find(r => r._id === selectedRoom._id);
+                    openRoomDetails(updatedRoom);
+                } catch(e) {}
+            }
+        }
+
+        async function setBedStatus(bedNumber, status) {
+            try {
+                await fetchAPI(`/rooms/${selectedRoom._id}/beds/${bedNumber}/status`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ status })
+                });
+                showToast('Bed status updated');
+                await loadRooms();
+                const updatedRoom = currentRooms.find(r => r._id === selectedRoom._id);
+                openRoomDetails(updatedRoom);
+            } catch(e) {}
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <script src="../js/core.js"></script>
+</head>
+<body data-layout="management" data-page-title="Fees & Payments - Management - HostelOS">
+<div class="max-w-6xl mx-auto space-y-6">
+                <!-- Toolbar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:w-64">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="search-input" placeholder="Search by student..." class="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-800 focus:ring-2 focus:ring-brand-500 outline-none text-sm">
+                        </div>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="openFeeModal()" class="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 transition shadow-sm whitespace-nowrap">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i> Create Fee
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 dark:bg-surface-900/50 text-gray-500 dark:text-gray-400">
+                                <tr>
+                                    <th class="px-6 py-4 font-medium">Student</th>
+                                    <th class="px-6 py-4 font-medium">Academic Year</th>
+                                    <th class="px-6 py-4 font-medium">Total Fee</th>
+                                    <th class="px-6 py-4 font-medium">Remaining</th>
+                                    <th class="px-6 py-4 font-medium">Due Date</th>
+                                    <th class="px-6 py-4 font-medium">Status</th>
+                                    <th class="px-6 py-4 font-medium text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fees-table-body" class="divide-y divide-gray-100 dark:divide-gray-800">
+                                <tr><td colspan="7" class="p-4"><div class="h-10 bg-gray-100 dark:bg-gray-800 rounded animate-pulse"></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+<script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <script>
+        checkAuth('MANAGEMENT');
+        lucide.createIcons();
+
+        let allFees = [];
+        let allStudents = [];
+        const fmt = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+
+        async function init() {
+            try {
+                allStudents = await fetchAPI('/students/');
+                const select = document.getElementById('f-student');
+                select.innerHTML = '<option value="">Select Student</option>' + allStudents.map(s => `<option value="${s._id}">${s.full_name} (${s.student_id})</option>`).join('');
+                
+                await loadFees();
+            } catch (e) {}
+        }
+
+        async function loadFees() {
+            try {
+                allFees = await fetchAPI('/fees/');
+                renderFees(allFees);
+            } catch (err) {}
+        }
+
+        function renderFees(data) {
+            const tbody = document.getElementById('fees-table-body');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No fee records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(f => {
+                let badgeClass = 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+                if (f.status === 'PAID') badgeClass = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+                else if (f.status === 'PARTIALLY_PAID') badgeClass = 'bg-brand-100 text-brand-800 dark:bg-brand-900/30 dark:text-brand-400';
+                else if (f.status === 'OVERDUE') badgeClass = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+
+                return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-surface-800/50 transition">
+                    <td class="px-6 py-4">
+                        <p class="font-medium">${f.student_name}</p>
+                        <p class="text-xs text-gray-500">${f.student_sid}</p>
+                    </td>
+                    <td class="px-6 py-4 text-sm">${f.academic_year}</td>
+                    <td class="px-6 py-4 text-sm font-medium">${fmt.format(f.fee_amount)}</td>
+                    <td class="px-6 py-4 text-sm font-bold ${f.remaining_amount > 0 ? 'text-red-500' : 'text-green-500'}">${fmt.format(f.remaining_amount)}</td>
+                    <td class="px-6 py-4 text-sm">${new Date(f.due_date).toLocaleDateString()}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full ${badgeClass}">${f.status.replace('_', ' ')}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        ${f.status !== 'PAID' ? `<button onclick='openPaymentModal(${JSON.stringify(f).replace(/'/g, "&apos;")})' class="text-brand-600 hover:text-brand-500 transition mr-3 text-sm font-medium">Pay</button>` : ''}
+                        <button onclick='openEditFeeModal(${JSON.stringify(f).replace(/'/g, "&apos;")})' class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `}).join('');
+            lucide.createIcons();
+        }
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            const filtered = allFees.filter(f => 
+                f.student_name.toLowerCase().includes(q) || 
+                f.student_sid.toLowerCase().includes(q)
+            );
+            renderFees(filtered);
+        });
+
+        function openFeeModal() {
+            document.getElementById('fee-form').reset();
+            document.getElementById('f-id').value = '';
+            document.getElementById('f-student').disabled = false;
+            document.getElementById('modal-title').textContent = 'Create Fee Record';
+            openModal('fee-modal');
+        }
+
+        function openEditFeeModal(f) {
+            document.getElementById('f-id').value = f._id;
+            document.getElementById('f-student').value = f.student_id;
+            document.getElementById('f-student').disabled = true; // prevent changing student
+            document.getElementById('f-year').value = f.academic_year;
+            document.getElementById('f-amount').value = f.fee_amount;
+            document.getElementById('f-due').value = f.due_date.split('T')[0];
+            document.getElementById('modal-title').textContent = 'Edit Fee Record';
+            openModal('fee-modal');
+        }
+
+        async function saveFee() {
+            const id = document.getElementById('f-id').value;
+            const payload = {
+                student_id: document.getElementById('f-student').value,
+                academic_year: document.getElementById('f-year').value,
+                fee_amount: parseFloat(document.getElementById('f-amount').value),
+                remaining_amount: parseFloat(document.getElementById('f-amount').value),
+                due_date: new Date(document.getElementById('f-due').value).toISOString()
+            };
+
+            try {
+                if (id) {
+                    await fetchAPI(`/fees/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+                    showToast('Fee record updated');
+                } else {
+                    await fetchAPI('/fees/', { method: 'POST', body: JSON.stringify(payload) });
+                    showToast('Fee record created');
+                }
+                closeModal('fee-modal');
+                loadFees();
+            } catch(e) {}
+        }
+
+        function openPaymentModal(f) {
+            document.getElementById('payment-form').reset();
+            document.getElementById('p-fee-id').value = f._id;
+            document.getElementById('p-student-id').value = f.student_id;
+            document.getElementById('p-student-name').textContent = `${f.student_name} (${f.student_sid})`;
+            document.getElementById('p-remaining').textContent = fmt.format(f.remaining_amount);
+            document.getElementById('p-amount').max = f.remaining_amount;
+            document.getElementById('p-amount').value = f.remaining_amount; // default to full payment
+            openModal('payment-modal');
+        }
+
+        async function savePayment() {
+            const payload = {
+                fee_id: document.getElementById('p-fee-id').value,
+                student_id: document.getElementById('p-student-id').value,
+                amount: parseFloat(document.getElementById('p-amount').value),
+                method: document.getElementById('p-method').value,
+                payment_date: new Date().toISOString(),
+                payment_id: "TBD", // Backend replaces
+                status: "COMPLETED"
+            };
+
+            try {
+                await fetchAPI('/payments/', { method: 'POST', body: JSON.stringify(payload) });
+                showToast('Payment recorded successfully');
+                closeModal('payment-modal');
+                loadFees();
+            } catch(e) {}
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<nav class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-surface-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="building-2" class="w-6 h-6 text-brand-500"></i>
+                    <span class="text-xl font-semibold tracking-tight">HostelOS</span>
+                </div>
+                <div class="hidden sm:flex ml-10 space-x-8 text-sm font-medium">
+                    <a href="dashboard.html" class="text-brand-600 dark:text-brand-400 border-b-2 border-brand-500">Dashboard</a>
+                    <a href="fees.html" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">My Fees</a>
+                    <a href="complaints.html" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">Complaints</a>
+                    <a href="maintenance.html" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">Maintenance</a>
+                    <a href="movements.html" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">Movement</a>
+                    <a href="announcements.html" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">Announcements</a>
+                </div>
+                <div class="flex items-center space-x-4 ml-auto">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-surface-800 transition">
+                        <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                    </button>
+                    <div class="relative group cursor-pointer">
+                        <div id="avatar-initials" class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-500 flex items-center justify-center text-white text-sm font-medium shadow-sm">
+                            ST
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="text-sm font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>

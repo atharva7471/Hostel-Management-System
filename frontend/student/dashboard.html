@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - HostelOS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#3b82f6', 600: '#2563eb' },
+                        surface: { 50: '#f9fafb', 100: '#f3f4f6', 800: '#1f2937', 900: '#111827' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-surface-50 text-gray-900 dark:bg-surface-900 dark:text-gray-100 min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-surface-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="building-2" class="w-6 h-6 text-brand-500"></i>
+                    <span class="text-xl font-semibold tracking-tight">HostelOS</span>
+                </div>
+                <div class="hidden sm:flex ml-10 space-x-8 text-sm font-medium">
+                    <a href="dashboard.html" class="text-brand-600 dark:text-brand-400 border-b-2 border-brand-500">Dashboard</a>
+                    <a href="fees.html" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">My Fees</a>
+                    <a href="complaints.html" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">Complaints</a>
+                    <a href="maintenance.html" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">Maintenance</a>
+                                    <a href="announcements.html" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">Announcements</a>
+</div>
+                <div class="flex items-center space-x-4 ml-auto">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-surface-800 transition">
+                        <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                    </button>
+                    <div class="relative group cursor-pointer">
+                        <div id="avatar-initials" class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-500 to-indigo-500 flex items-center justify-center text-white text-sm font-medium shadow-sm">
+                            ST
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="text-sm font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold tracking-tight" id="welcome-msg">Welcome back</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Here's your hostel overview for today.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Identity / Room Card -->
+            <div class="p-6 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden flex flex-col justify-center min-h-[160px]" id="identity-card-container">
+                <div class="animate-pulse h-16 bg-gray-100 dark:bg-gray-800 rounded"></div>
+            </div>
+
+            <!-- Fee Card -->
+            <div class="p-6 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4 text-gray-600 dark:text-gray-300">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="credit-card" class="w-5 h-5"></i>
+                            <h2 class="text-sm font-semibold uppercase tracking-wider">Fee Status</h2>
+                        </div>
+                        <span class="px-2.5 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-full">Paid</span>
+                    </div>
+                    <p class="text-3xl font-bold mb-2">₹0.00 <span class="text-lg text-gray-400 font-normal">due</span></p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Next payment due: Oct 1, 2024</p>
+                </div>
+            </div>
+
+            <!-- Active Requests Card -->
+            <div class="md:col-span-2 p-6 rounded-2xl bg-white dark:bg-surface-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-base font-semibold">Active Requests</h2>
+                    <div class="flex gap-2">
+                        <a href="complaints.html" class="px-3 py-1.5 text-sm font-medium text-brand-600 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:hover:bg-brand-900/40 rounded-lg transition">+ Complaint</a>
+                        <a href="maintenance.html" class="px-3 py-1.5 text-sm font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:hover:bg-orange-900/40 rounded-lg transition">+ Maintenance</a>
+                    </div>
+                </div>
+                <div class="space-y-3" id="active-requests-container">
+                    <div class="p-4 bg-gray-50 dark:bg-surface-900/50 rounded-xl animate-pulse h-16"></div>
+                </div>
+            </div>
+        </div>
+    
+                <!-- Phase 5: Comms -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-lg font-bold">Recent Announcements</h2>
+                            <a href="announcements.html" class="text-sm font-medium text-brand-600 hover:text-brand-500">View all</a>
+                        </div>
+                        <div id="recent-announcements" class="space-y-4">
+                            <div class="animate-pulse h-12 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-lg font-bold">System Activity</h2>
+                        </div>
+                        <div id="recent-notifications" class="space-y-4">
+                            <div class="animate-pulse h-12 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+</main>
+    <!-- Profile Completion Modal -->
+    <div id="profile-modal" class="fixed inset-0 z-[100] hidden">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity duration-300 opacity-0 modal-backdrop" onclick="closeModal('profile-modal')"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-white dark:bg-surface-800 w-full max-w-2xl rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 pointer-events-auto transition-all duration-300 transform scale-95 opacity-0 modal-panel flex flex-col max-h-full">
+                <div class="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 shrink-0">
+                    <h2 class="text-xl font-semibold">Complete Your Application</h2>
+                    <button onclick="closeModal('profile-modal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="p-6 overflow-y-auto flex-1">
+                    <form id="profile-form" class="space-y-4">
+                        <input type="hidden" id="p-id">
+                        <input type="hidden" id="p-name">
+                        <input type="hidden" id="p-email">
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Student ID</label>
+                                <input type="text" id="p-student_id" required class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Phone</label>
+                                <input type="text" id="p-phone" required class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Course</label>
+                                <input type="text" id="p-course" required class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Academic Year</label>
+                                <input type="text" id="p-year" required class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Guardian Name</label>
+                                <input type="text" id="p-guardian_name" required class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Guardian Phone</label>
+                                <input type="text" id="p-guardian_phone" required class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Preferred Hostel</label>
+                                <select id="p-preferred_hostel" class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500">
+                                    <option value="No Preference">No Preference</option>
+                                    <option value="Boys Hostel A">Boys Hostel A</option>
+                                    <option value="Girls Hostel B">Girls Hostel B</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Preferred Room Type</label>
+                                <select id="p-preferred_room" class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500">
+                                    <option value="Single">Single</option>
+                                    <option value="Double">Double</option>
+                                    <option value="Triple">Triple</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Special Requirements</label>
+                            <textarea id="p-special" rows="2" class="w-full px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-surface-900 focus:ring-2 focus:ring-brand-500"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="p-6 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3 shrink-0">
+                    <button onclick="closeModal('profile-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-surface-700 rounded-xl hover:bg-gray-200 transition">Cancel</button>
+                    <button onclick="submitProfile()" class="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-500 transition">Submit Application</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/theme.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        checkAuth('STUDENT');
+        lucide.createIcons();
+
+        function openProfileModal() {
+            const p = window.currentProfile;
+            if(!p) return;
+            document.getElementById('p-id').value = p._id;
+            document.getElementById('p-name').value = p.full_name;
+            document.getElementById('p-email').value = p.email;
+            
+            document.getElementById('p-student_id').value = p.student_id || '';
+            document.getElementById('p-phone').value = p.phone || '';
+            document.getElementById('p-course').value = p.course || '';
+            document.getElementById('p-year').value = p.year || '';
+            document.getElementById('p-guardian_name').value = p.guardian_name || '';
+            document.getElementById('p-guardian_phone').value = p.guardian_phone || '';
+            document.getElementById('p-preferred_hostel').value = p.preferred_hostel || 'No Preference';
+            document.getElementById('p-preferred_room').value = p.preferred_room_type || 'Single';
+            document.getElementById('p-special').value = p.special_requirements || '';
+            
+            openModal('profile-modal');
+        }
+
+        async function submitProfile() {
+            const id = document.getElementById('p-id').value;
+            const payload = {
+                full_name: document.getElementById('p-name').value,
+                email: document.getElementById('p-email').value,
+                student_id: document.getElementById('p-student_id').value,
+                phone: document.getElementById('p-phone').value,
+                course: document.getElementById('p-course').value,
+                year: document.getElementById('p-year').value,
+                guardian_name: document.getElementById('p-guardian_name').value,
+                guardian_phone: document.getElementById('p-guardian_phone').value,
+                preferred_hostel: document.getElementById('p-preferred_hostel').value,
+                preferred_room_type: document.getElementById('p-preferred_room').value,
+                special_requirements: document.getElementById('p-special').value,
+            };
+            
+            // Validate
+            if (!payload.student_id || !payload.phone || !payload.course || !payload.year || !payload.guardian_name || !payload.guardian_phone) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+
+            try {
+                await fetchAPI('/students/' + id, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+                showToast('Application submitted successfully!');
+                closeModal('profile-modal');
+                loadProfile();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            
+                // handled
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                const data = await fetchAPI('/dashboard/stats');
+                if (data && data.profile) {
+                    const p = data.profile;
+                    
+                    document.getElementById('welcome-msg').textContent = `Welcome back, ${p.full_name}`;
+                    document.getElementById('avatar-initials').textContent = p.full_name.substring(0, 2).toUpperCase();
+
+                    // Phase 6: Onboarding & Identity Logic
+                    const idContainer = document.getElementById('identity-card-container');
+                    if (idContainer) {
+                        if (p.status === 'ACTIVE_RESIDENT') {
+                            idContainer.innerHTML = `
+                                <div class="absolute top-0 right-0 p-6 opacity-10">
+                                    <i data-lucide="shield-check" class="w-24 h-24"></i>
+                                </div>
+                                <div class="relative z-10">
+                                    <div class="flex items-center space-x-2 mb-4 text-brand-600 dark:text-brand-400">
+                                        <i data-lucide="badge-check" class="w-5 h-5"></i>
+                                        <h2 class="text-sm font-semibold uppercase tracking-wider">Your Hostel Identity</h2>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-center bg-gray-50 dark:bg-surface-900/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                                            <span class="text-xs text-gray-500 uppercase font-semibold tracking-wide">Resident ID</span>
+                                            <span class="font-mono font-bold text-gray-900 dark:text-white tracking-tight">${p.resident_id}</span>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3 mt-3">
+                                            <div>
+                                                <p class="text-xs text-gray-500 mb-0.5">Hostel</p>
+                                                <p class="font-medium text-sm truncate" title="${p.allocated_hostel_id || 'Assigned'}">${p.allocated_hostel_id || 'Assigned'}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500 mb-0.5">Room & Bed</p>
+                                                <p class="font-medium text-sm">${p.allocated_room_number} - Bed ${p.allocated_bed_number}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (p.application_status === 'APPROVED') {
+                            idContainer.innerHTML = `
+                                <div class="text-center w-full">
+                                    <div class="w-12 h-12 bg-green-50 text-green-600 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <i data-lucide="check" class="w-6 h-6"></i>
+                                    </div>
+                                    <h3 class="font-semibold text-lg text-green-700 dark:text-green-400">Application Approved</h3>
+                                    <p class="text-sm text-gray-500 mt-1">Awaiting hostel and room allocation.</p>
+                                </div>
+                            `;
+                        } else if (p.application_status === 'UNDER_REVIEW') {
+                            idContainer.innerHTML = `
+                                <div class="text-center w-full">
+                                    <div class="w-12 h-12 bg-blue-50 text-blue-600 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <i data-lucide="clock" class="w-6 h-6"></i>
+                                    </div>
+                                    <h3 class="font-semibold text-lg text-brand-700 dark:text-brand-400">Application Under Review</h3>
+                                    <p class="text-sm text-gray-500 mt-1">Management is currently reviewing your profile.</p>
+                                </div>
+                            `;
+                        } else {
+                            // INCOMPLETE or CHANGES_REQUESTED
+                            const isChanges = p.application_status === 'CHANGES_REQUESTED';
+                            idContainer.innerHTML = `
+                                <div class="text-center w-full">
+                                    <div class="w-12 h-12 ${isChanges ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/30' : 'bg-gray-50 text-gray-600 dark:bg-surface-900'} rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <i data-lucide="${isChanges ? 'alert-circle' : 'file-edit'}" class="w-6 h-6"></i>
+                                    </div>
+                                    <h3 class="font-semibold text-lg ${isChanges ? 'text-orange-700 dark:text-orange-400' : ''}">${isChanges ? 'Changes Requested' : 'Complete Your Profile'}</h3>
+                                    <p class="text-sm text-gray-500 mt-1 mb-4">${isChanges ? 'Management requested updates to your application.' : 'Please complete your application to get a room.'}</p>
+                                    <button onclick="openProfileModal()" class="px-5 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-500 transition rounded-xl shadow-sm hover:shadow">Edit Application</button>
+                                </div>
+                            `;
+                        }
+                    }
+                    window.currentProfile = p; // Store for modal
+                    
+                    const reqContainer = document.getElementById('active-requests-container');
+                    let activeHtml = '';
+                    
+                    const reqs = [];
+                    if (data.active_complaints) reqs.push(...data.active_complaints.map(c => ({...c, type: 'Complaint'})));
+                    if (data.active_maintenance) reqs.push(...data.active_maintenance.map(m => ({...m, type: 'Maintenance'})));
+                    
+                    reqs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+                    
+                    if (reqs.length === 0) {
+                        activeHtml = `<p class="text-gray-500 text-sm text-center py-4">No active requests. You're all caught up!</p>`;
+                    } else {
+                        activeHtml = reqs.map(r => `
+                            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-surface-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center ${r.type==='Complaint' ? 'bg-brand-100 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400' : 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'}">
+                                        <i data-lucide="${r.type==='Complaint' ? 'message-square-warning' : 'wrench'}" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">${r.title}</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">${r.type} • ${new Date(r.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-300">${r.status.replace('_', ' ')}</span>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    reqContainer.innerHTML = activeHtml;
+                    lucide.createIcons();
+
+        function openProfileModal() {
+            const p = window.currentProfile;
+            if(!p) return;
+            document.getElementById('p-id').value = p._id;
+            document.getElementById('p-name').value = p.full_name;
+            document.getElementById('p-email').value = p.email;
+            
+            document.getElementById('p-student_id').value = p.student_id || '';
+            document.getElementById('p-phone').value = p.phone || '';
+            document.getElementById('p-course').value = p.course || '';
+            document.getElementById('p-year').value = p.year || '';
+            document.getElementById('p-guardian_name').value = p.guardian_name || '';
+            document.getElementById('p-guardian_phone').value = p.guardian_phone || '';
+            document.getElementById('p-preferred_hostel').value = p.preferred_hostel || 'No Preference';
+            document.getElementById('p-preferred_room').value = p.preferred_room_type || 'Single';
+            document.getElementById('p-special').value = p.special_requirements || '';
+            
+            openModal('profile-modal');
+        }
+
+        async function submitProfile() {
+            const id = document.getElementById('p-id').value;
+            const payload = {
+                full_name: document.getElementById('p-name').value,
+                email: document.getElementById('p-email').value,
+                student_id: document.getElementById('p-student_id').value,
+                phone: document.getElementById('p-phone').value,
+                course: document.getElementById('p-course').value,
+                year: document.getElementById('p-year').value,
+                guardian_name: document.getElementById('p-guardian_name').value,
+                guardian_phone: document.getElementById('p-guardian_phone').value,
+                preferred_hostel: document.getElementById('p-preferred_hostel').value,
+                preferred_room_type: document.getElementById('p-preferred_room').value,
+                special_requirements: document.getElementById('p-special').value,
+            };
+            
+            // Validate
+            if (!payload.student_id || !payload.phone || !payload.course || !payload.year || !payload.guardian_name || !payload.guardian_phone) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+
+            try {
+                await fetchAPI('/students/' + id, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload)
+                });
+                showToast('Application submitted successfully!');
+                closeModal('profile-modal');
+                loadProfile();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            
+                // handled
+            }
+        }
+                }
+            } catch (err) {}
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>
+
+
+
+
+
+
