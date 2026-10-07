@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <title>My Movements | HostelOS</title>
+    <script src="../js/core.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-surface-900 text-gray-900 dark:text-gray-100 min-h-screen" data-layout="student" data-page-title="My Movements">
+
+    <div slot="main-content" class="space-y-8">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 dark:border-gray-800 pb-6">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight">Movement & Check-out</h1>
+                <p class="text-gray-500 mt-2">Manage your exit requests and check-in/out status.</p>
+            </div>
+            
+            <div id="current-status-badge" class="px-4 py-2 rounded-lg bg-gray-100 dark:bg-surface-800 text-sm font-medium flex items-center">
+                <i data-lucide="loader-2" class="w-4 h-4 mr-2 animate-spin"></i> Checking status...
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            
+            <!-- Left col: Active Request or New Request -->
+            <div class="md:col-span-1 space-y-6" id="movement-action-panel">
+                <!-- Action panel content injected here -->
+                <div class="bg-white dark:bg-surface-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-center h-48">
+                    <i data-lucide="loader-2" class="w-8 h-8 text-brand-500 animate-spin"></i>
+                </div>
+            </div>
+
+            <!-- Right col: History -->
+            <div class="md:col-span-2">
+                <div class="bg-white dark:bg-surface-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold">Movement History</h2>
+                        <button onclick="fetchMyMovements()" class="text-brand-600 hover:text-brand-700 text-sm font-medium transition">
+                            <i data-lucide="refresh-cw" class="w-4 h-4 inline-block"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="divide-y divide-gray-100 dark:divide-gray-800 max-h-[600px] overflow-y-auto" id="movements-list">
+                        <!-- Injected via JS -->
+                        <div class="p-12 text-center text-gray-500">
+                            Loading history...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- New Request Modal -->
+    <div id="new-request-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-gray-900/50 dark:bg-black/50 backdrop-blur-sm" onclick="closeNewRequestModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-surface-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-bold">New Exit Request</h3>
+                    <button onclick="closeNewRequestModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <form id="new-request-form" onsubmit="handleRequestSubmit(event)" class="p-6 overflow-y-auto">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reason</label>
+                            <select id="request-reason" required class="w-full px-4 py-2 bg-gray-50 dark:bg-surface-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition">
+                                <option value="">Select a reason...</option>
+                                <option value="Going Home">Going Home</option>
+                                <option value="College">College</option>
+                                <option value="Personal">Personal</option>
+                                <option value="Medical">Medical</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Destination</label>
+                            <input type="text" id="request-destination" required placeholder="Where are you going?" class="w-full px-4 py-2 bg-gray-50 dark:bg-surface-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expected Exit</label>
+                                <input type="datetime-local" id="request-exit" required class="w-full px-4 py-2 bg-gray-50 dark:bg-surface-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expected Return</label>
+                                <input type="datetime-local" id="request-return" required class="w-full px-4 py-2 bg-gray-50 dark:bg-surface-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Optional Note</label>
+                            <textarea id="request-note" rows="2" class="w-full px-4 py-2 bg-gray-50 dark:bg-surface-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-8 pt-5 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                        <button type="button" onclick="closeNewRequestModal()" class="px-4 py-2 bg-white dark:bg-surface-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-surface-700">Cancel</button>
+                        <button type="submit" id="request-submit-btn" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 shadow-sm flex items-center justify-center min-w-[120px]">
+                            Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myMovements = [];
+        let activeMovement = null;
+        let studentProfile = null;
+
+        async function initPage() {
+            try {
+                // Fetch student profile to get presence status
+                studentProfile = await fetchAPI('/students/me');
+                await fetchMyMovements();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchMyMovements() {
+            try {
+                myMovements = await fetchAPI('/movements');
+                
+                // Find if there's an active one (PENDING, APPROVED, OUTSIDE)
+                activeMovement = myMovements.find(m => ['PENDING', 'APPROVED', 'OUTSIDE'].includes(m.status));
+                
+                renderStatusBadge();
+                renderActionPanel();
+                renderHistory();
+            } catch (err) {
+                console.error("Error fetching my movements:", err);
+            }
+        }
+
+        function renderStatusBadge() {
+            const badge = document.getElementById('current-status-badge');
+            
+            // Re-check from profile
+            const isOutside = studentProfile?.presence_status === 'OUTSIDE';
+            
+            if (isOutside) {
+                badge.className = 'px-4 py-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 text-sm font-medium flex items-center';
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-orange-500 mr-2 animate-pulse"></span> Currently Outside`;
+            } else {
+                badge.className = 'px-4 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-sm font-medium flex items-center';
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span> Inside Hostel`;
+            }
+        }
+
+        function renderActionPanel() {
+            const panel = document.getElementById('movement-action-panel');
+            
+            if (studentProfile?.status !== 'ACTIVE_RESIDENT') {
+                panel.innerHTML = `
+                    <div class="bg-white dark:bg-surface-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm text-center">
+                        <i data-lucide="alert-circle" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Not a Resident</h3>
+                        <p class="text-gray-500 text-sm">You must be allocated a room before you can use the movement system.</p>
+                    </div>
+                `;
+            } else if (!activeMovement) {
+                panel.innerHTML = `
+                    <div class="bg-white dark:bg-surface-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center h-full min-h-[300px]">
+                        <div class="w-16 h-16 bg-brand-50 dark:bg-brand-900/20 rounded-full flex items-center justify-center mb-4">
+                            <i data-lucide="door-open" class="w-8 h-8 text-brand-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Need to leave?</h3>
+                        <p class="text-gray-500 text-sm mb-6">Create a movement request to notify management.</p>
+                        <button onclick="openNewRequestModal()" class="w-full py-2.5 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 shadow-sm transition">
+                            Create Request
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Active movement logic
+                const m = activeMovement;
+                
+                let timeline = '';
+                let actionBtn = '';
+                
+                if (m.status === 'PENDING') {
+                    timeline = `
+                        <div class="flex items-center space-x-3 text-sm font-medium text-brand-600">
+                            <div class="w-6 h-6 rounded-full bg-brand-100 flex items-center justify-center"><i data-lucide="clock" class="w-4 h-4"></i></div>
+                            <span>Awaiting Approval</span>
+                        </div>
+                    `;
+                } else if (m.status === 'APPROVED') {
+                    timeline = `
+                        <div class="flex items-center space-x-3 text-sm font-medium text-emerald-600">
+                            <div class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center"><i data-lucide="check" class="w-4 h-4"></i></div>
+                            <span>Request Approved</span>
+                        </div>
+                    `;
+                    actionBtn = `<button onclick="updateMovement('${m._id}', 'checkout')" class="w-full mt-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 shadow-sm transition">Check Out Now</button>`;
+                } else if (m.status === 'OUTSIDE') {
+                    timeline = `
+                        <div class="flex items-center space-x-3 text-sm font-medium text-orange-600">
+                            <div class="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center"><i data-lucide="navigation" class="w-4 h-4"></i></div>
+                            <span>Currently Outside</span>
+                        </div>
+                    `;
+                    actionBtn = `<button onclick="updateMovement('${m._id}', 'checkin')" class="w-full mt-6 py-2.5 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 shadow-sm transition">Check In Return</button>`;
+                }
+                
+                panel.innerHTML = `
+                    <div class="bg-white dark:bg-surface-800 rounded-xl p-6 border border-brand-200 dark:border-brand-900/50 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10">
+                            <i data-lucide="activity" class="w-24 h-24 text-brand-500"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">Active Request</h3>
+                            
+                            ${timeline}
+                            
+                            <div class="mt-6 space-y-4">
+                                <div>
+                                    <p class="text-xs text-gray-500">Destination</p>
+                                    <p class="font-medium">${m.destination} (${m.reason})</p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-gray-500">Expected Exit</p>
+                                        <p class="font-medium text-sm">${formatDate(m.expected_exit)}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500">Expected Return</p>
+                                        <p class="font-medium text-sm">${formatDate(m.expected_return)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${actionBtn}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if(window.lucide) lucide.createIcons();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('movements-list');
+            const history = myMovements.filter(m => !['PENDING', 'APPROVED', 'OUTSIDE'].includes(m.status));
+            
+            if (!history.length) {
+                list.innerHTML = `<div class="p-12 text-center text-gray-500">No movement history available.</div>`;
+                return;
+            }
+
+            list.innerHTML = history.map(m => {
+                const badgeClass = getStatusBadgeClass(m.status);
+                return `
+                    <div class="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-semibold">${m.reason}</span>
+                                <span class="text-gray-400 text-sm">&rarr; ${m.destination}</span>
+                            </div>
+                            <div class="text-sm text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
+                                <span>Exit: ${m.actual_exit ? formatDate(m.actual_exit) : '-'}</span>
+                                <span>Return: ${m.actual_return ? formatDate(m.actual_return) : '-'}</span>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            <span class="px-2.5 py-1 text-xs font-medium rounded-full ${badgeClass}">
+                                ${m.status.replace('_', ' ')}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'RETURNED': return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+                case 'REJECTED': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                case 'LATE_RETURN': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200';
+                default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+            }
+        }
+
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            const d = new Date(isoString);
+            return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function openNewRequestModal() {
+            document.getElementById('new-request-form').reset();
+            
+            // Set defaults to current time
+            const now = new Date();
+            const exitStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            const later = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours later
+            const returnStr = new Date(later.getTime() - later.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            
+            document.getElementById('request-exit').value = exitStr;
+            document.getElementById('request-return').value = returnStr;
+            
+            document.getElementById('new-request-modal').classList.remove('hidden');
+        }
+
+        function closeNewRequestModal() {
+            document.getElementById('new-request-modal').classList.add('hidden');
+        }
+
+        async function handleRequestSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('request-submit-btn');
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin mr-2"></i> Submitting...`;
+            btn.disabled = true;
+
+            const payload = {
+                reason: document.getElementById('request-reason').value,
+                destination: document.getElementById('request-destination').value,
+                expected_exit: new Date(document.getElementById('request-exit').value).toISOString(),
+                expected_return: new Date(document.getElementById('request-return').value).toISOString(),
+                note: document.getElementById('request-note').value
+            };
+
+            try {
+                await fetchAPI('/movements/', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                closeNewRequestModal();
+                await fetchMyMovements();
+            } catch (err) {
+                console.error(err);
+                alert(err.message || "Error submitting request");
+            } finally {
+                btn.innerHTML = `Submit Request`;
+                btn.disabled = false;
+            }
+        }
+
+        async function updateMovement(id, action) {
+            try {
+                await fetchAPI(`/movements/${id}/${action}`, { method: 'PATCH' });
+                // Refresh profile to get updated presence status
+                studentProfile = await fetchAPI('/students/me');
+                await fetchMyMovements();
+            } catch (err) {
+                console.error(err);
+                alert(err.message || 'Error updating movement');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

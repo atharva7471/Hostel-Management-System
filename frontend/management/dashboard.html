@@ -154,6 +154,28 @@
                     </a>
                 </div>
                 
+                <!-- Phase 7: Resident Movement -->
+                <div class="mt-6 bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-lg font-bold">Resident Movement</h2>
+                        <a href="movements.html" class="text-sm font-medium text-brand-600 hover:text-brand-500">View Tracker</a>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="p-4 bg-gray-50 dark:bg-surface-900 rounded-xl border border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                            <div><p class="text-xs font-medium text-gray-500 mb-1">Currently Outside</p><p class="text-xl font-bold" id="stat-outside-dash">0</p></div>
+                            <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><i data-lucide="navigation" class="w-4 h-4"></i></div>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-surface-900 rounded-xl border border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                            <div><p class="text-xs font-medium text-gray-500 mb-1">Pending Requests</p><p class="text-xl font-bold" id="stat-pending-dash">0</p></div>
+                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><i data-lucide="clock" class="w-4 h-4"></i></div>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-surface-900 rounded-xl border border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                            <div><p class="text-xs font-medium text-gray-500 mb-1">Late Returns</p><p class="text-xl font-bold text-red-600" id="stat-late-dash">0</p></div>
+                            <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><i data-lucide="alert-circle" class="w-4 h-4"></i></div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Phase 6: Student Onboarding -->
                 <div class="mt-6 bg-white dark:bg-surface-800 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-6">
                     <div class="flex justify-between items-center mb-6">
@@ -274,6 +296,23 @@
 
                 // Phase 6 Stats
                 document.getElementById('stat-pending-applications').textContent = `${stats.pending_applications || 0} pending`;
+                
+                // Phase 7: Movements
+                // We'll fetch movements directly from the API for the dashboard
+                try {
+                    const movements = await fetchAPI('/movements');
+                    let m_outside = 0, m_pending = 0, m_late = 0;
+                    movements.forEach(m => {
+                        if (m.status === 'OUTSIDE') m_outside++;
+                        if (m.status === 'PENDING') m_pending++;
+                        if (m.status === 'LATE_RETURN') m_late++;
+                    });
+                    document.getElementById('stat-outside-dash').textContent = m_outside;
+                    document.getElementById('stat-pending-dash').textContent = m_pending;
+                    document.getElementById('stat-late-dash').textContent = m_late;
+                } catch (e) {
+                    console.error("Error fetching movements for dashboard", e);
+                }
                 
                 const appsContainer = document.getElementById('recent-applications-body');
                 if (stats.recent_applications && stats.recent_applications.length > 0) {

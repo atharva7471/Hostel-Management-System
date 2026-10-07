@@ -46,6 +46,10 @@ class ApplicationStatus(str, Enum):
     REJECTED = "REJECTED"
     CHANGES_REQUESTED = "CHANGES_REQUESTED"
 
+class PresenceStatus(str, Enum):
+    INSIDE = "INSIDE"
+    OUTSIDE = "OUTSIDE"
+
 class StudentProfile(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     full_name: str
@@ -73,6 +77,8 @@ class StudentProfile(BaseModel):
     allocated_room_id: Optional[str] = None
     allocated_room_number: Optional[str] = None
     allocated_bed_number: Optional[str] = None
+    
+    presence_status: PresenceStatus = PresenceStatus.INSIDE
     
     model_config = ConfigDict(populate_by_name=True)
 

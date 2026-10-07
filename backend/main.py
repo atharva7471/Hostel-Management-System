@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routes import auth_routes, students, hostels, rooms, dashboard, fees, payments, complaints, maintenance, notifications, announcements, allocations
+from backend.routes import auth_routes, students, hostels, rooms, dashboard, fees, payments, complaints, maintenance, notifications, announcements, allocations, movements
 
 app = FastAPI(title="HostelOS API", description="Smarter Hostel Management")
 
@@ -24,6 +24,7 @@ app.include_router(complaints.router, prefix="/api/complaints", tags=["complaint
 app.include_router(maintenance.router, prefix="/api/maintenance", tags=["maintenance"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(announcements.router, prefix="/api/announcements", tags=["announcements"])
+app.include_router(movements.router, prefix="/api/movements", tags=["movements"])
 
 @app.get("/api/health")
 def health_check():

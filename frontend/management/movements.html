@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <title>Resident Movement | HostelOS</title>
+    <script src="../js/core.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-surface-900 text-gray-900 dark:text-gray-100 min-h-screen" data-layout="management" data-page-title="Resident Movement">
+    
+    <!-- Main Content -->
+    <div slot="main-content" class="space-y-6">
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">Resident Movement</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Track check-ins, check-outs, and pending requests.</p>
+            </div>
+            <button onclick="fetchMovements()" class="px-4 py-2 bg-white dark:bg-surface-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-surface-700 transition">
+                <i data-lucide="refresh-cw" class="w-4 h-4 inline-block mr-1"></i> Refresh
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="movement-stats">
+            <!-- Stats -->
+            <div class="bg-white dark:bg-surface-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div><p class="text-sm text-gray-500 font-medium">Inside Hostel</p><h3 class="text-2xl font-bold mt-1" id="stat-inside">0</h3></div>
+                <div class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-600"><i data-lucide="user-check"></i></div>
+            </div>
+            <div class="bg-white dark:bg-surface-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div><p class="text-sm text-gray-500 font-medium">Currently Outside</p><h3 class="text-2xl font-bold mt-1" id="stat-outside">0</h3></div>
+                <div class="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-orange-600"><i data-lucide="user-minus"></i></div>
+            </div>
+            <div class="bg-white dark:bg-surface-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div><p class="text-sm text-gray-500 font-medium">Pending Requests</p><h3 class="text-2xl font-bold mt-1" id="stat-pending">0</h3></div>
+                <div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600"><i data-lucide="clock"></i></div>
+            </div>
+            <div class="bg-white dark:bg-surface-800 p-5 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
+                <div><p class="text-sm text-gray-500 font-medium">Late Returns</p><h3 class="text-2xl font-bold mt-1" id="stat-late">0</h3></div>
+                <div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600"><i data-lucide="alert-circle"></i></div>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="bg-white dark:bg-surface-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex gap-4">
+                <select id="status-filter" class="px-3 py-2 bg-white dark:bg-surface-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm" onchange="fetchMovements()">
+                    <option value="">All Statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="OUTSIDE">Outside</option>
+                    <option value="LATE_RETURN">Late Return</option>
+                    <option value="RETURNED">Returned</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-gray-50 dark:bg-surface-900 text-gray-500 dark:text-gray-400">
+                        <tr>
+                            <th class="px-6 py-4 font-medium">Student</th>
+                            <th class="px-6 py-4 font-medium">Reason</th>
+                            <th class="px-6 py-4 font-medium">Exit Time</th>
+                            <th class="px-6 py-4 font-medium">Return Time</th>
+                            <th class="px-6 py-4 font-medium">Status</th>
+                            <th class="px-6 py-4 font-medium text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="movements-tbody" class="divide-y divide-gray-200 dark:divide-gray-800">
+                        <!-- Loading State -->
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-brand-500"></i>
+                                Loading movements...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movement Details Modal -->
+    <div id="movement-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-gray-900/50 dark:bg-black/50 backdrop-blur-sm" onclick="closeMovementModal()"></div>
+        <div class="absolute right-0 top-0 h-full w-full max-w-md bg-white dark:bg-surface-800 shadow-2xl flex flex-col">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold">Movement Request</h3>
+                <button onclick="closeMovementModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 flex-1 overflow-y-auto space-y-6" id="movement-modal-content">
+                <!-- Injected content -->
+            </div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-surface-900 flex gap-3 justify-end" id="movement-modal-actions">
+                <!-- Actions -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let movements = [];
+        let selectedMovement = null;
+
+        async function fetchMovements() {
+            try {
+                const status = document.getElementById('status-filter').value;
+                const url = status ? `/movements?status=${status}` : '/movements';
+                
+                const data = await fetchAPI(url);
+                movements = data;
+                renderMovements();
+                
+                // Fetch stats separately or calculate from all? 
+                // We'll just calculate stats if we are fetching all
+                if (!status) {
+                    calculateStats(data);
+                }
+            } catch (err) {
+                console.error("Error fetching movements:", err);
+                document.getElementById('movements-tbody').innerHTML = `
+                    <tr><td colspan="6" class="px-6 py-8 text-center text-red-500">Failed to load movements.</td></tr>
+                `;
+            }
+        }
+
+        function calculateStats(data) {
+            let pending = 0, outside = 0, late = 0;
+            data.forEach(m => {
+                if (m.status === 'PENDING') pending++;
+                if (m.status === 'OUTSIDE') outside++;
+                if (m.status === 'LATE_RETURN') late++;
+            });
+            document.getElementById('stat-pending').innerText = pending;
+            document.getElementById('stat-outside').innerText = outside;
+            document.getElementById('stat-late').innerText = late;
+            
+            // To get INSIDE, we should fetch students or just deduce from active residents - outside. Let's just leave stat-inside blank or fetch students.
+            fetchAPI('/students').then(students => {
+                const active = students.filter(s => s.status === 'ACTIVE_RESIDENT').length;
+                document.getElementById('stat-inside').innerText = active - outside;
+            }).catch(() => {});
+        }
+
+        function renderMovements() {
+            const tbody = document.getElementById('movements-tbody');
+            if (!movements.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500">No records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = movements.map(m => {
+                const badgeClass = getStatusBadgeClass(m.status);
+                
+                return `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-surface-700/50 transition cursor-pointer" onclick="openMovementModal('${m._id}')">
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-gray-900 dark:text-gray-100">${m.student_name}</div>
+                            <div class="text-xs text-gray-500">${m.resident_id}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium">${m.reason}</div>
+                            <div class="text-xs text-gray-500">${m.destination}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm">
+                            ${m.actual_exit ? formatDate(m.actual_exit) : '<span class="text-gray-400">Not exited</span>'}
+                            <div class="text-xs text-gray-500">Exp: ${formatDate(m.expected_exit)}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm">
+                            ${m.actual_return ? formatDate(m.actual_return) : '<span class="text-gray-400">Not returned</span>'}
+                            <div class="text-xs text-gray-500">Exp: ${formatDate(m.expected_return)}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 text-xs font-medium rounded-full ${badgeClass}">
+                                ${m.status.replace('_', ' ')}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button class="text-brand-600 hover:text-brand-700 text-sm font-medium">View</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Re-run lucide icons
+            if(window.lucide) lucide.createIcons();
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'PENDING': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                case 'APPROVED': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                case 'OUTSIDE': return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+                case 'RETURNED': return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+                case 'REJECTED': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                case 'LATE_RETURN': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200';
+                default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+            }
+        }
+
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            const d = new Date(isoString);
+            return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function openMovementModal(id) {
+            selectedMovement = movements.find(m => m._id === id);
+            if (!selectedMovement) return;
+            
+            const m = selectedMovement;
+            
+            const detailsHtml = `
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 mb-1">Student Details</h4>
+                    <p class="font-medium">${m.student_name} (${m.resident_id})</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Bed ${m.bed_id}</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 mb-1">Movement Reason</h4>
+                    <p class="font-medium">${m.reason}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">To: ${m.destination}</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Expected Exit</h4>
+                        <p class="text-sm font-medium">${formatDate(m.expected_exit)}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Expected Return</h4>
+                        <p class="text-sm font-medium">${formatDate(m.expected_return)}</p>
+                    </div>
+                </div>
+                
+                ${m.note ? `
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 mb-1">Note</h4>
+                    <p class="text-sm p-3 bg-gray-50 dark:bg-surface-900 rounded-lg">${m.note}</p>
+                </div>
+                ` : ''}
+                
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                    <span class="px-2.5 py-1 text-xs font-medium rounded-full inline-flex ${getStatusBadgeClass(m.status)}">
+                        Status: ${m.status.replace('_', ' ')}
+                    </span>
+                </div>
+            `;
+            
+            document.getElementById('movement-modal-content').innerHTML = detailsHtml;
+            
+            let actionsHtml = '';
+            if (m.status === 'PENDING') {
+                actionsHtml = `
+                    <button onclick="updateMovement('${m._id}', 'reject')" class="px-4 py-2 bg-white dark:bg-surface-800 text-red-600 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/10">Reject</button>
+                    <button onclick="updateMovement('${m._id}', 'approve')" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 shadow-sm">Approve Request</button>
+                `;
+            } else if (m.status === 'APPROVED') {
+                actionsHtml = `
+                    <button onclick="updateMovement('${m._id}', 'checkout')" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 shadow-sm">Mark as Checked Out</button>
+                `;
+            } else if (m.status === 'OUTSIDE') {
+                actionsHtml = `
+                    <button onclick="updateMovement('${m._id}', 'checkin')" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 shadow-sm">Mark as Checked In</button>
+                `;
+            } else {
+                actionsHtml = `
+                    <button onclick="closeMovementModal()" class="px-4 py-2 bg-white dark:bg-surface-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-surface-700">Close</button>
+                `;
+            }
+            
+            document.getElementById('movement-modal-actions').innerHTML = actionsHtml;
+            document.getElementById('movement-modal').classList.remove('hidden');
+        }
+
+        function closeMovementModal() {
+            document.getElementById('movement-modal').classList.add('hidden');
+        }
+        
+        async function updateMovement(id, action) {
+            try {
+                await fetchAPI(`/movements/${id}/${action}`, { method: 'PATCH' });
+                closeMovementModal();
+                fetchMovements();
+            } catch (err) {
+                console.error(err);
+                alert(err.message || 'Error updating movement');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchMovements);
+    </script>
+</body>
+</html>

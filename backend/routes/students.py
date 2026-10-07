@@ -15,6 +15,14 @@ async def get_students(db: AsyncIOMotorDatabase = Depends(get_db), current_user:
         student["_id"] = str(student["_id"])
     return students
 
+@router.get("/me", response_model=StudentProfile)
+async def get_my_profile(db: AsyncIOMotorDatabase = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    student = await db.students.find_one({"email": current_user["email"]})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found")
+    student["_id"] = str(student["_id"])
+    return student
+
 @router.get("/{student_id}", response_model=StudentProfile)
 async def get_student(student_id: str, db: AsyncIOMotorDatabase = Depends(get_db), current_user: dict = Depends(require_management)):
     student = await db.students.find_one({"_id": ObjectId(student_id)})
